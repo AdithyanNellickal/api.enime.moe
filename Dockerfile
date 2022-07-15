@@ -1,31 +1,31 @@
-FROM node:16.15.1-alpine As development
+FROM node:16.3.0-alpine
 
-WORKDIR /usr/src/app
+RUN mkdir -p /app
+WORKDIR /app
 
-COPY package*.json ./
+COPY package*.json ./app
 
-RUN npm install --only=development
+RUN apk add --no-cache tini
 
-COPY . .
+COPY . /app
 
-RUN npm run build
-
-FROM node:16.15.1-alpine As production
+RUN npm install npm -g
+RUN npm install -g vite@2.9.14
+RUN npm install -g rimraf
+RUN npm install -D --legacy-peer-deps
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 ENV PRODUCTION=true
 ENV PROD=true
 
-WORKDIR /usr/src/app
+RUN npm install --legacy-peer-deps
 
-COPY package*.json ./
+RUN npm run build
 
-RUN npm install --only=production
+EXPOSE 3000
 
-COPY . .
-
-COPY --from=development /usr/src/app/dist ./dist
+COPY /app/dist ./dist
 
 CMD ["node", "dist/main"]
 
