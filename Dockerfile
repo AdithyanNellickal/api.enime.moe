@@ -1,4 +1,4 @@
-FROM node:16.3.0-alpine
+FROM node:16.3.0-alpine AS development
 
 RUN apk update
 RUN apk add --no-cache tini
@@ -16,24 +16,33 @@ USER node
 
 WORKDIR /usr/src/app
 
-COPY package*.json .
-COPY pnpm-lock*.yaml .
+COPY package*.json ./
+COPY pnpm-lock*.yaml ./
 
-RUN ls -ld $(find .)
+RUN npm i -g vite@2.9.14
+RUN npm i -g rimraf
+RUN npm i --legacy-peer-deps
 
-RUN exec sh &&\
-pnpm add -g vite@2.9.14 &&\
-pnpm add -g rimraf &&\
-pnpm install \
+COPY . .
+
+RUN npm run build
+
+FROM node:16.3.0-alpine AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 ENV PRODUCTION=true
 ENV PROD=true
 
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --only=production --legacy-peer-deps
+
 COPY . .
 
-RUN exec sh && pnpm run build
+COPY --from=development /usr/src/app/dist ./dist
 
 EXPOSE 3000
 
