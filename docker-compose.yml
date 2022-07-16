@@ -1,7 +1,7 @@
-nginx-proxy:
-  image: jwilder/nginx-proxy
-  restart: always
-  ports:
-    - "80:80"
-  volumes:
-    - "/var/run/docker.sock:/tmp/docker.sock:ro"
+services:
+  enime:
+    image: enime-api
+    restart: always
+    environment:
+      - VIRTUAL_HOST=api.enime.moe
+      - VIRTUAL_PORT=3000
