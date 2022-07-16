@@ -5,3 +5,12 @@ services:
     environment:
       - VIRTUAL_HOST=api.enime.moe
       - VIRTUAL_PORT=3000
+  db:
+    image: mysql:8
+    restart: always
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
