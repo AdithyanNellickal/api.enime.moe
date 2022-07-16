@@ -1,6 +1,6 @@
 services:
   enime:
-    image: enime-api
+    image: enime/api:1.0
     restart: always
     environment:
       - VIRTUAL_HOST=api.enime.moe
