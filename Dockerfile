@@ -1,10 +1,7 @@
-FROM node:16.3.0-alpine AS development
+FROM node:18-alpine AS development
 
 RUN apk update
 RUN apk add --no-cache tini
-RUN apk add curl
-
-RUN curl -f https://get.pnpm.io/v6.16.js | node - add --global pnpm
 
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global \
     PATH=$PATH:/home/node/.npm-global/bin:/home/node/node_modules/.bin:$PATH
@@ -27,7 +24,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:16.3.0-alpine AS production
+FROM node:18-alpine AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
