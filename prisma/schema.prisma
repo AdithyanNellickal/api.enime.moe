@@ -2,10 +2,89 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model Proxy {
+    id          String    @id   @default(cuid())
+    username    String
+    password    String
+    address     String    @unique
+    port_http   Int
+    port_socks5 Int
+    country     String
+    city        String?
+    used        Int
+
+    @@map("proxies")
+}
+
+model Anime {
+    id          String          @id  @default(cuid())
+    anilistId   Int             @unique
+    coverImage  String?
+    status      AiringStatus
+    season      AiringSeason
+    title       String
+    relations   Relation[]
+    episodes    Episode[]
+
+    @@map("anime")
+}
+
+model Episode {
+    id          String     @id  @default(cuid())
+    animeId     String
+    anime       Anime      @relation(fields: [animeId], references: [id])
+    number      Int
+    title       String?
+    video       String
+    websiteId   String
+    website     Website    @relation(fields: [websiteId], references: [id])
+
+    @@map("episode")
+}
+
+model Relation {
+    id          String     @id  @default(cuid())
+    anime       Anime      @relation(fields: [animeId], references: [id])
+    animeId     String
+    type        RelationType
+
+    @@map("relation")
+}
+
+model Website {
+    id          String     @id  @default(cuid())
+    name        String
+    url         String     @unique
+    locale      String
+    episode     Episode[]
+
+    @@map("website")
+}
+
+enum RelationType {
+    PREQUEL
+    SEQUEL
+}
+
+enum AiringStatus {
+    FINISHED
+    RELEASING
+    NOT_YET_RELEASED
+    CANCELLED
+    HIATUS
+}
+
+enum AiringSeason {
+    SPRING
+    SUMMER
+    FALL
+    WINTER
 }

@@ -15,14 +15,17 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 COPY pnpm-lock*.yaml ./
+COPY .swcrc ./
+COPY prisma ./prisma/
 
-RUN npm i -g vite@2.9.14
+RUN npm i -g @swc/cli @swc/core @swc/register prisma
 RUN npm i -g rimraf
 RUN npm i --legacy-peer-deps
 
 COPY . .
 
 RUN npm run build
+RUN npm run prisma:generate
 
 FROM node:18-alpine AS production
 
@@ -40,6 +43,7 @@ RUN npm install --only=production --legacy-peer-deps
 COPY . .
 
 COPY --from=development /usr/src/app/dist ./dist
+COPY --from=development /usr/src/app/node_modules ./node_modules
 
 EXPOSE 3000
 
