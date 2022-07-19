@@ -30,7 +30,7 @@ model Anime {
     coverImage  String?
     status      AiringStatus
     season      AiringSeason
-    title       String
+    title       Json
     relations   Relation[]
     episodes    Episode[]
 
@@ -43,11 +43,21 @@ model Episode {
     anime       Anime      @relation(fields: [animeId], references: [id])
     number      Int
     title       String?
-    video       String
-    websiteId   String
-    website     Website    @relation(fields: [websiteId], references: [id])
+    sources     Source[]
 
     @@map("episode")
+}
+
+model Source {
+    id          String     @id  @default(cuid())
+    url         String     @unique
+    websiteId   String
+    website     Website    @relation(fields: [websiteId], references: [id])
+    episodeId   String
+    episode     Episode    @relation(fields: [episodeId], references: [id])
+    resolution  String
+
+    @@map("source")
 }
 
 model Relation {
@@ -64,7 +74,7 @@ model Website {
     name        String
     url         String     @unique
     locale      String
-    episode     Episode[]
+    sources     Source[]
 
     @@map("website")
 }

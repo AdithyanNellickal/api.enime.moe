@@ -1,5 +1,6 @@
 import Scraper from '../scraper';
 import * as cheerio from 'cheerio';
+import { MatchEpisode } from '../../../types/global';
 
 export default class GogoanimeScraper extends Scraper {
 
@@ -11,6 +12,7 @@ export default class GogoanimeScraper extends Scraper {
 
         const $ = cheerio.load(await (await response).text());
 
+        console.log($.html())
         return [];
     }
 

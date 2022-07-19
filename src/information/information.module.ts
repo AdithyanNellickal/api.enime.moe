@@ -1,12 +1,13 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { GraphQLClient } from 'graphql-request';
 import DatabaseService from '../database/database.service';
 import { AIRING_ANIME } from './anilist-queries';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Module({
     providers: [DatabaseService]
 })
-export default class InformationModule implements OnModuleInit {
+export default class InformationModule {
     private readonly client: GraphQLClient;
 
     anilistBaseEndpoint = "https://graphql.anilist.co";
@@ -22,7 +23,10 @@ export default class InformationModule implements OnModuleInit {
         });
     }
 
-    async onModuleInit() {
+    @Cron(CronExpression.EVERY_MINUTE)
+    async updateAnime() {
+        const before = Date.now();
+        Logger.debug("Now we start refetching currently releasing anime from Anilist");
         const currentSeason = Math.floor((new Date().getMonth() / 12 * 4)) % 4;
 
         let previousSeason = currentSeason - 1;
@@ -72,7 +76,7 @@ export default class InformationModule implements OnModuleInit {
                     anilistId: anime.id
                 },
                 create: {
-                    title: anime.title.romaji,
+                    title: anime.title,
                     anilistId: anime.id,
                     coverImage: anime.coverImage.extraLarge,
                     status: anime.status,
@@ -80,10 +84,13 @@ export default class InformationModule implements OnModuleInit {
                 },
                 update: {
                     coverImage: anime.coverImage.extraLarge,
+                    title: anime.title,
                     status: anime.status,
                     season: anime.season
                 }
             })
         }
+
+        Logger.debug(`Refetching completed, took ${Date.now() - before}ms, tracked ${trackingAnime.length} anime entries.`);
     }
 }

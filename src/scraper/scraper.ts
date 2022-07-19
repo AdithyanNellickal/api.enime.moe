@@ -1,5 +1,6 @@
 import ProxyService from '../proxy/proxy.service';
 import fetch from 'node-fetch';
+import { MatchEpisode } from '../../types/global';
 
 export default abstract class Scraper {
 

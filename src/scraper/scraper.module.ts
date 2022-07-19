@@ -16,6 +16,8 @@ export default class ScraperModule implements OnModuleInit {
     }
 
     async onModuleInit() {
+        if (process.env.TESTING) return;
+
         const files = await fs.readdir(path.resolve(__dirname, "./impl"));
         for (const file of files) {
             const { default: ScraperModule } = await import(path.resolve(__dirname, "./impl", file));

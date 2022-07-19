@@ -1,9 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
 import { Proxy, ProxyCallback, ProxyListResponse } from './proxy.interface';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import fetch from 'node-fetch';
-import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 @Injectable()
@@ -17,14 +16,14 @@ export default class ProxyService implements OnModuleInit {
     constructor(private readonly databaseService: DatabaseService) {
     }
 
-    @Cron("0 0 * * *", {
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
         name: "Refreshing proxy list"
     })
     async scheduledRefreshProxyList() {
         await this.load();
     }
 
-    @Cron("* * * * *", {
+    @Cron(CronExpression.EVERY_MINUTE, {
         name: "Updating proxy usage to database"
     })
     async updateProxyUsedToDatabase() {

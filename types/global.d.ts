@@ -1,9 +1,9 @@
-interface MatchEpisode {
+export interface MatchEpisode {
     title: string;
     path: string;
 }
 
-interface Episode {
+export interface Episode {
     number: number;
     title?: string;
 
