@@ -11,8 +11,6 @@ export default class GogoanimeScraper extends Scraper {
         const response = this.get(`${this.url()}/search.html?keyword=${encodeURI(title)}}`, {}, true);
 
         const $ = cheerio.load(await (await response).text());
-
-        console.log($.html())
         return [];
     }
 
