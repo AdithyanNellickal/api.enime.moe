@@ -5,6 +5,16 @@ services:
     environment:
       - VIRTUAL_HOST=api.enime.moe
       - VIRTUAL_PORT=3000
+      - WEBSHARE_API_KEY=${WEBSHARE_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - BACKUP_PROXY_ADDRESS=${BACKUP_PROXY_ADDRESS}
+      - BACKUP_PROXY_PORT_HTTP=${BACKUP_PROXY_PORT_HTTP}
+      - BACKUP_PROXY_PORT_SOCKS5=${BACKUP_PROXY_PORT_SOCKS5}
+      - BACKUP_PROXY_USERNAME=${BACKUP_PROXY_USERNAME}
+      - BACKUP_PROXY_PASSWORD=${BACKUP_PROXY_PASSWORD}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
   db:
     image: mysql:8
     restart: always
@@ -15,6 +25,8 @@ services:
     volumes:
       - db:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
   watchtower:
     image: containrrr/watchtower
     environment:
@@ -29,8 +41,15 @@ services:
       - '6379'
     volumes:
       - redis:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
 
 volumes:
   redis:
   db:
     driver: local
+
+networks:
+  default:
+    name: nginx-proxy
+    external: true
