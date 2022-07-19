@@ -7,11 +7,12 @@ import DatabaseService from './database/database.service';
 import ProxyService from './proxy/proxy.service';
 import ScraperModule from './scraper/scraper.module';
 import InformationModule from './information/information.module';
+import HealthModule from './health/health.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true
-  }), ScheduleModule.forRoot(), ScraperModule, InformationModule],
+  }), ScheduleModule.forRoot(), ScraperModule, InformationModule, HealthModule],
   controllers: [AppController],
   providers: [AppService, DatabaseService, ProxyService],
 })
