@@ -3,6 +3,7 @@
 
 generator client {
     provider = "prisma-client-js"
+    previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -34,8 +35,17 @@ model Anime {
     relations   Relation[]
     episodes    Episode[]
     next        DateTime?
+    genre       Genre[]
 
     @@map("anime")
+}
+
+model Genre {
+    id          String     @id  @default(cuid())
+    name        String     @unique
+    anime       Anime[]
+
+    @@map("genre")
 }
 
 model Episode {

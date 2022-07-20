@@ -96,8 +96,13 @@ export default class ScraperModule implements OnModuleInit {
                         url: scrapedEpisode.url
                     },
                     create: {
-                        websiteId: scraper.websiteMeta.id,
-                        episodeId: episode.id,
+                        website: {
+                          connect: { id: scraper.websiteMeta.id }
+                        },
+                        episode: {
+                          connect: { id: episode.id }
+                        },
+                        url: scrapedEpisode.url,
                         resolution: scrapedEpisode.resolution,
                         format: scrapedEpisode.format
                     },

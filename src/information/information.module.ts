@@ -95,16 +95,32 @@ export default class InformationModule {
                     coverImage: anime.coverImage.extraLarge,
                     status: anime.status,
                     season: anime.season,
-                    next: nextEpisode
+                    next: nextEpisode,
+                    genre: {
+                        connectOrCreate: anime.genres.map(genre => {
+                            return {
+                                where: { name: genre },
+                                create: { name: genre }
+                            }
+                        })
+                    }
                 },
                 update: {
                     coverImage: anime.coverImage.extraLarge,
                     title: anime.title,
                     status: anime.status,
                     season: anime.season,
-                    next: nextEpisode
+                    next: nextEpisode,
+                    genre: {
+                        connectOrCreate: anime.genres.map(genre => {
+                            return {
+                                where: { name: genre },
+                                create: { name: genre }
+                            }
+                        })
+                    }
                 }
-            })
+            });
         }
 
         Logger.debug(`Refetching completed, took ${Date.now() - before}ms, tracked ${trackingAnime.length} anime entries.`);
