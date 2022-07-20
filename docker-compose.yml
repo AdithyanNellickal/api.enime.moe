@@ -25,8 +25,9 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_ROOT_PASSWORD=${POSTGRES_ROOT_PASSWORD}
-      - POSTGRES_ROOT_USER=${POSTGRES_ROOT_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_ROOT_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_ROOT_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
   watchtower:
     image: containrrr/watchtower
     environment:
