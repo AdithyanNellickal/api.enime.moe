@@ -1,10 +1,11 @@
 import Scraper from '../scraper';
 import * as cheerio from 'cheerio';
-import { MatchEpisode } from '../../../types/global';
+import { Episode, MatchEpisode } from '../../../types/global';
 
 export default class GogoanimeScraper extends Scraper {
 
-    async fetch(path: string) {
+    async fetch(path: string): Promise<Episode> {
+        return undefined;
     }
 
     async match(title): Promise<MatchEpisode[]> {
