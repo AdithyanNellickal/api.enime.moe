@@ -33,6 +33,7 @@ model Anime {
     title       Json
     relations   Relation[]
     episodes    Episode[]
+    next        DateTime?
 
     @@map("anime")
 }
@@ -41,7 +42,7 @@ model Episode {
     id          String     @id  @default(cuid())
     animeId     String
     anime       Anime      @relation(fields: [animeId], references: [id])
-    number      Int
+    number      Int        @unique
     title       String?
     sources     Source[]
 
@@ -55,7 +56,8 @@ model Source {
     website     Website    @relation(fields: [websiteId], references: [id])
     episodeId   String
     episode     Episode    @relation(fields: [episodeId], references: [id])
-    resolution  String
+    resolution  String?
+    format      String?
 
     @@map("source")
 }

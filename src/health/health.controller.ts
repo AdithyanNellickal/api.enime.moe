@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheckService, HttpHealthIndicator, HealthCheck, MemoryHealthIndicator } from '@nestjs/terminus';
-import { PrismaHealthIndicator } from './indicator/PrismaHealthIndicator';
+import { PrismaHealthIndicator } from './indicator/prisma-health-indicator';
 
 @Controller("health")
 export class HealthController {

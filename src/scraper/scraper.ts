@@ -1,8 +1,9 @@
 import ProxyService from '../proxy/proxy.service';
 import fetch from 'node-fetch';
-import { MatchEpisode } from '../../types/global';
+import { Episode, MatchEpisode, WebsiteMeta } from '../../types/global';
 
 export default abstract class Scraper {
+    public websiteMeta: WebsiteMeta = undefined;
 
     constructor(private readonly proxyService: ProxyService) {}
 
@@ -16,7 +17,7 @@ export default abstract class Scraper {
 
     abstract match(title): MatchEpisode[] | Promise<MatchEpisode[]>;
 
-    abstract fetch(path: string);
+    abstract fetch(path: string): Episode | Promise<Episode>;
 
     async get(url, headers = {}, proxy = false) {
         let agent = undefined;

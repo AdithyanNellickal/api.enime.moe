@@ -3,9 +3,17 @@ import { GraphQLClient } from 'graphql-request';
 import DatabaseService from '../database/database.service';
 import { AIRING_ANIME } from './anilist-queries';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import ScraperService from '../scraper/scraper.service';
+
+import utc from 'dayjs/plugin/utc';
+import dayjs from 'dayjs';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
-    providers: [DatabaseService]
+    imports: [BullModule.registerQueue({
+        name: "enime"
+    })],
+    providers: [DatabaseService, ScraperService]
 })
 export default class InformationModule {
     private readonly client: GraphQLClient;
@@ -15,6 +23,8 @@ export default class InformationModule {
     seasons = ["WINTER", "SPRING", "SUMMER", "FALL"];
 
     constructor(private readonly databaseService: DatabaseService) {
+        dayjs.extend(utc);
+
         this.client = new GraphQLClient(this.anilistBaseEndpoint, {
             headers: {
                 "Content-Type": "application/json",
@@ -71,6 +81,10 @@ export default class InformationModule {
         }
 
         for (let anime of trackingAnime) {
+            const airingSchedule = anime.airingSchedule.nodes;
+            let nextEpisode = undefined;
+            if (airingSchedule.length) nextEpisode = dayjs.unix(airingSchedule[0].airingAt).utc().toISOString();
+
             await this.databaseService.anime.upsert({
                 where: {
                     anilistId: anime.id
@@ -80,13 +94,15 @@ export default class InformationModule {
                     anilistId: anime.id,
                     coverImage: anime.coverImage.extraLarge,
                     status: anime.status,
-                    season: anime.season
+                    season: anime.season,
+                    next: nextEpisode
                 },
                 update: {
                     coverImage: anime.coverImage.extraLarge,
                     title: anime.title,
                     status: anime.status,
-                    season: anime.season
+                    season: anime.season,
+                    next: nextEpisode
                 }
             })
         }

@@ -5,6 +5,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import DatabaseService from './database/database.service';
+import helmet from '@fastify/helmet';
 
 export const bootstrap = async () => {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -16,6 +17,8 @@ export const bootstrap = async () => {
   const databaseService: DatabaseService = app.get(DatabaseService);
   await databaseService.enableShutdownHooks(app);
 
+  app.enableCors();
+  await app.register(helmet);
   await app.listen(port || 3000, "0.0.0.0");
 
   return app;

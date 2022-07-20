@@ -1,16 +1,22 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import GogoanimeScraper from './impl/gogoanime';
+import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import ProxyService from '../proxy/proxy.service';
 import DatabaseService from '../database/database.service';
 import fs from 'fs/promises';
 import path from 'path';
+import { BullModule, Process, Processor } from '@nestjs/bull';
+import ScraperService from './scraper.service';
+import { Job } from 'bull';
+import Scraper from './scraper';
 
 @Module({
-    imports: [],
-    providers: [DatabaseService, ProxyService]
+    imports: [BullModule.registerQueue({
+        name: "enime"
+    })],
+    providers: [ScraperService, DatabaseService, ProxyService]
 })
+@Processor("enime")
 export default class ScraperModule implements OnModuleInit {
-    importedScrapers = [];
+    importedScrapers: Scraper[] = [];
 
     constructor(private readonly proxyService: ProxyService, private readonly databaseService: DatabaseService) {
     }
@@ -28,7 +34,7 @@ export default class ScraperModule implements OnModuleInit {
         }
 
         for (const scraper of this.importedScrapers) {
-            await this.databaseService.website.upsert({
+            const website = await this.databaseService.website.upsert({
                 where: {
                     url: scraper.url()
                 },
@@ -38,9 +44,66 @@ export default class ScraperModule implements OnModuleInit {
                     name: scraper.name()
                 },
                 update: {}
-            })
-            console.log(await scraper.match("Lycoris Recoil"))
+            });
+
+            scraper.websiteMeta = {
+                id: website.id
+            }
         }
     }
 
+    @Process("scrape-anime-match")
+    async scrape(job: Job<string>) {
+        const id = job.data;
+
+        const anime = await this.databaseService.anime.findUnique({
+            where: {
+                id
+            }
+        });
+        
+        if (!anime) {
+            Logger.error(`Scraper queue detected an ID ${id} but its corresponding anime entry does not exist in the database. Skipping this job.`);
+            return;
+        }
+
+        for (let scraper of this.importedScrapers) {
+            let matchedEpisodes = scraper.match(anime.title);
+            if (matchedEpisodes instanceof Promise) matchedEpisodes = await matchedEpisodes;
+
+            for (let matchedEpisode of matchedEpisodes) {
+                let scrapedEpisode = scraper.fetch(matchedEpisode.path);
+                if (scrapedEpisode instanceof Promise) scrapedEpisode = await scrapedEpisode;
+
+                const episode = await this.databaseService.episode.upsert({
+                    where: {
+                        number: scrapedEpisode.number
+                    },
+                    create: {
+                        animeId: anime.id,
+                        number: scrapedEpisode.number,
+                        title: scrapedEpisode.title
+                    },
+                    update: {
+                        ...(scrapedEpisode.title && {
+                            title: scrapedEpisode.title
+                        })
+                    }
+                });
+
+                await this.databaseService.source.upsert({
+                    where: {
+                        url: scrapedEpisode.url
+                    },
+                    create: {
+                        websiteId: scraper.websiteMeta.id,
+                        episodeId: episode.id,
+                        resolution: scrapedEpisode.resolution,
+                        format: scrapedEpisode.format
+                    },
+                    update: {}
+                })
+            }
+        }
+    }
 }
