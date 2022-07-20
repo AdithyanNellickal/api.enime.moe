@@ -23,7 +23,7 @@ export default abstract class Scraper {
         let agent = undefined;
 
         if (proxy) {
-            agent = this.proxyService.getProxyAgent();
+            agent = await this.proxyService.getProxyAgent();
         }
 
         return fetch(url, {
@@ -38,7 +38,7 @@ export default abstract class Scraper {
         let agent = undefined;
 
         if (proxy) {
-            agent = this.proxyService.getProxyAgent();
+            agent = await this.proxyService.getProxyAgent();
         }
 
         return fetch(url, {

@@ -11,8 +11,6 @@ export default class ProxyService implements OnModuleInit {
 
     private loading = false;
 
-    private proxies: Proxy[] = [];
-
     constructor(private readonly databaseService: DatabaseService) {
     }
 
@@ -23,30 +21,16 @@ export default class ProxyService implements OnModuleInit {
         await this.load();
     }
 
-    @Cron(CronExpression.EVERY_MINUTE, {
-        name: "Updating proxy usage to database"
-    })
-    async updateProxyUsedToDatabase() {
-        if (!this.loading) {
-            for (const proxy of this.proxies) {
-                this.databaseService.proxy.update({
-                    where: {
-                        address: proxy.address
-                    },
-                    data: {
-                        used: proxy.used
-                    }
-                })
-            }
-        }
-    }
-
     async onModuleInit() {
         await this.load();
     }
 
-    private getAvailableProxy(): Proxy {
-        const available = this.proxies.sort((a, b) => a.used - b.used)[0];
+    private async getAvailableProxy(): Promise<Proxy> {
+        const available = await this.databaseService.proxy.findFirst({
+            orderBy: {
+                used: "asc"
+            }
+        });
 
         // Might only happen at the startup, in this case we use predefined proxy as backup
         if (!available) return {
@@ -57,12 +41,16 @@ export default class ProxyService implements OnModuleInit {
             username: process.env.BACKUP_PROXY_USERNAME
         };
 
-        for (let i = 0; i < this.proxies.length; i++) {
-            if (this.proxies[i].address === available.address) {
-                this.proxies[i].used += 1;
+        await this.databaseService.proxy.update({
+            where: {
+                id: available.id
+            },
+            data: {
+                used: {
+                    increment: 1
+                }
             }
-        }
-
+        })
         return available;
     }
 
@@ -94,8 +82,6 @@ export default class ProxyService implements OnModuleInit {
             await this.databaseService.proxy.createMany({
                 data: mappedProxies
             });
-
-            this.proxies = mappedProxies;
         }
 
         this.loading = false;
@@ -108,8 +94,8 @@ export default class ProxyService implements OnModuleInit {
         }
     }
 
-    public getProxyAgent() {
-        const proxy = this.getAvailableProxy();
+    public async getProxyAgent() {
+        const proxy = await this.getAvailableProxy();
 
         return new HttpsProxyAgent(`socks://${proxy.username}:${proxy.password}@${proxy.address}:${proxy.port_socks5}`);
     }

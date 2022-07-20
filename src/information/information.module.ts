@@ -81,9 +81,8 @@ export default class InformationModule {
         }
 
         for (let anime of trackingAnime) {
-            const airingSchedule = anime.airingSchedule.nodes;
-            let nextEpisode = undefined;
-            if (airingSchedule.length) nextEpisode = dayjs.unix(airingSchedule[0].airingAt).utc().toISOString();
+            let nextEpisode = anime.nextAiringEpisode;
+            if (nextEpisode) nextEpisode = dayjs.unix(nextEpisode.airingAt).utc().toISOString();
 
             await this.databaseService.anime.upsert({
                 where: {
@@ -103,7 +102,8 @@ export default class InformationModule {
                                 create: { name: genre }
                             }
                         })
-                    }
+                    },
+                    synonyms: anime.synonyms
                 },
                 update: {
                     coverImage: anime.coverImage.extraLarge,
@@ -118,7 +118,8 @@ export default class InformationModule {
                                 create: { name: genre }
                             }
                         })
-                    }
+                    },
+                    synonyms: anime.synonyms
                 }
             });
         }

@@ -51,7 +51,7 @@ specifiers:
   https-proxy-agent: ^5.0.1
   jest: ^27.2.5
   mocha: ^10.0.0
-  node-fetch: '2'
+  node-fetch: 2.6.7
   prettier: ^2.3.2
   prisma: ^4.1.0
   reflect-metadata: ^0.1.13

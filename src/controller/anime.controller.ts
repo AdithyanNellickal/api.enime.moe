@@ -43,7 +43,8 @@ export default class AnimeController {
             title: dbAnime.title as unknown as AnimeTitle,
             season: dbAnime.season as unknown as AnimeSeason,
             coverImage: dbAnime.coverImage,
-            genres: dbAnime.genre.map(g => g.name)
+            genres: dbAnime.genre.map(g => g.name),
+            synonyms: dbAnime.synonyms
         }
     }
 }
@@ -55,6 +56,7 @@ interface Anime {
     season: AnimeSeason;
     coverImage: string;
     genres: string[];
+    synonyms: [];
 }
 
 interface AnimeTitle {

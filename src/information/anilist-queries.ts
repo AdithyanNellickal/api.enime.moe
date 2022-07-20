@@ -80,11 +80,10 @@ export const AIRING_ANIME = gql`query ($season: MediaSeason, $year: Int, $format
           }
         }
       }
-      airingSchedule(notYetAired: true, perPage: 2) {
-        nodes {
-          episode
-          airingAt
-        }
+      nextAiringEpisode {
+        id
+        episode
+        airingAt
       }
     }
   }

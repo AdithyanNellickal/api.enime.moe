@@ -26,16 +26,18 @@ model Proxy {
 }
 
 model Anime {
-    id          String          @id  @default(cuid())
-    anilistId   Int             @unique
-    coverImage  String?
-    status      AiringStatus
-    season      AiringSeason
-    title       Json
-    relations   Relation[]
-    episodes    Episode[]
-    next        DateTime?
-    genre       Genre[]
+    id                  String          @id  @default(cuid())
+    anilistId           Int             @unique
+    coverImage          String?
+    status              AiringStatus
+    season              AiringSeason
+    title               Json
+    relations           Relation[]
+    episodes            Episode[]
+    next                DateTime?
+    genre               Genre[]
+    synonyms            String[]
+    lastEpisodeUpdate   DateTime?
 
     @@map("anime")
 }
