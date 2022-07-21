@@ -1,5 +1,5 @@
 {
-  "sourceMaps": true,
+  "sourceMaps": false,
   "module": {
     "type": "commonjs",
     "strict": true
