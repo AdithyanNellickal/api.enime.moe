@@ -1,6 +1,6 @@
 import Scraper from '../scraper';
 import * as cheerio from 'cheerio';
-import { Episode, MatchEpisode } from '../../../types/global';
+import { Episode, EpisodeWebpage } from '../../../types/global';
 
 export default class GogoanimeScraper extends Scraper {
 
@@ -8,7 +8,7 @@ export default class GogoanimeScraper extends Scraper {
         return undefined;
     }
 
-    async match(title): Promise<MatchEpisode[]> {
+    async match(title): Promise<EpisodeWebpage[]> {
         const response = this.get(`${this.url()}/search.html?keyword=${encodeURI(title)}}`, {}, true);
 
         const $ = cheerio.load(await (await response).text());

@@ -3,7 +3,7 @@ export interface WebsiteMeta {
     // Maybe more fields so we use a class here
 }
 
-export interface MatchEpisode {
+export interface EpisodeWebpage {
     title?: string;
     number: number;
     path: string;
