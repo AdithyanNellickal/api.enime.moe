@@ -18,7 +18,11 @@ describe("Gogoanime Scraper", () => {
         const scraper = new GogoanimeScraper(application.get(ProxyService));
 
         // TODO - Scraper logic and testing here
-        console.log(await scraper.match("Lycoris Recoil"))
-    });
+        const anime = await scraper.match("Lycoris Recoil");
 
-})
+        for (let a of anime) {
+            await scraper.fetch(a.path, 1);
+        }
+    }).timeout(0);
+
+}).timeout(0)

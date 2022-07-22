@@ -32,6 +32,7 @@ model Anime {
     status              AiringStatus
     season              AiringSeason
     title               Json
+    currentEpisode      Int?
     relations           Relation[]
     episodes            Episode[]
     next                DateTime?
@@ -53,8 +54,8 @@ model Genre {
 model Episode {
     id          String     @id  @default(cuid())
     animeId     String
-    anime       Anime      @relation(fields: [animeId], references: [id])
-    number      Int        @unique
+    anime       Anime      @relation(fields: [animeId], references: [id], onDelete: Cascade)
+    number      Int
     title       String?
     sources     Source[]
 
@@ -65,9 +66,11 @@ model Source {
     id          String     @id  @default(cuid())
     url         String     @unique
     websiteId   String
-    website     Website    @relation(fields: [websiteId], references: [id])
+    website     Website    @relation(fields: [websiteId], references: [id], onDelete: Cascade)
     episodeId   String
-    episode     Episode    @relation(fields: [episodeId], references: [id])
+    episode     Episode    @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+    type        SourceType @default(DIRECT)
+    referer     String?
     resolution  String?
     format      String?
 
@@ -76,7 +79,7 @@ model Source {
 
 model Relation {
     id          String     @id  @default(cuid())
-    anime       Anime      @relation(fields: [animeId], references: [id])
+    anime       Anime      @relation(fields: [animeId], references: [id], onDelete: Cascade)
     animeId     String
     type        RelationType
 
@@ -111,4 +114,9 @@ enum AiringSeason {
     SUMMER
     FALL
     WINTER
+}
+
+enum SourceType {
+    DIRECT
+    PROXY
 }

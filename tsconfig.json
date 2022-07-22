@@ -23,5 +23,6 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["mocha"]
   },
-  "include": ["./types/global.d.ts", "./src/**/*.d.ts"]
+  "include": [
+    "./src/types/global.ts", "./src/**/*.d.ts"]
 }

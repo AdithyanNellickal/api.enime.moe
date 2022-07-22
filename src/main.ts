@@ -10,7 +10,9 @@ import helmet from '@fastify/helmet';
 export const bootstrap = async () => {
   const app = await NestFactory.create<NestFastifyApplication>(
       AppModule,
-      new FastifyAdapter()
+      new FastifyAdapter({
+        trustProxy: true
+      })
   );
   const port = process.env.PORT;
 

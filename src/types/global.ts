@@ -3,16 +3,21 @@ export interface WebsiteMeta {
     // Maybe more fields so we use a class here
 }
 
-export interface EpisodeWebpage {
+export interface AnimeWebPage {
     title?: string;
-    number: number;
     path: string;
 }
 
 export interface Episode {
-    number: number;
     title?: string;
     url: string;
-    resolution: string;
-    format: string;
+    resolution?: string;
+    format?: string;
+    referer?: string;
+    type: SourceType;
+}
+
+export enum SourceType {
+    DIRECT,
+    PROXY
 }

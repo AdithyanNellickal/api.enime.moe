@@ -1,6 +1,6 @@
 import ProxyService from '../proxy/proxy.service';
 import fetch from 'node-fetch';
-import { Episode, EpisodeWebpage, WebsiteMeta } from '../../types/global';
+import { Episode, AnimeWebPage, WebsiteMeta } from '../types/global';
 
 export default abstract class Scraper {
     public websiteMeta: WebsiteMeta = undefined;
@@ -15,9 +15,9 @@ export default abstract class Scraper {
         return "en_US";
     }
 
-    abstract match(title): EpisodeWebpage[] | Promise<EpisodeWebpage[]>;
+    abstract match(title): AnimeWebPage | Promise<AnimeWebPage>;
 
-    abstract fetch(path: string): Episode | Promise<Episode>;
+    abstract fetch(path: string, number: number): Episode | Promise<Episode>;
 
     async get(url, headers = {}, proxy = false) {
         let agent = undefined;

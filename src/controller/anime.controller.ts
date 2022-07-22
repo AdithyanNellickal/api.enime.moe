@@ -1,6 +1,8 @@
 import { CacheInterceptor, CacheTTL, Controller, Get, NotFoundException, Param, UseInterceptors } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller("/anime")
 @UseInterceptors(CacheInterceptor)
 export default class AnimeController {
@@ -12,7 +14,12 @@ export default class AnimeController {
     async all(): Promise<Anime[]> {
         const all = await this.databaseService.anime.findMany({
             include: {
-                genre: true
+                genre: true,
+                episodes: {
+                    include: {
+                        sources: true
+                    }
+                }
             }
         });
 
@@ -44,7 +51,8 @@ export default class AnimeController {
             season: dbAnime.season as unknown as AnimeSeason,
             coverImage: dbAnime.coverImage,
             genres: dbAnime.genre.map(g => g.name),
-            synonyms: dbAnime.synonyms
+            synonyms: dbAnime.synonyms,
+            episodes: dbAnime.episodes
         }
     }
 }
@@ -57,6 +65,7 @@ interface Anime {
     coverImage: string;
     genres: string[];
     synonyms: [];
+    episodes: [];
 }
 
 interface AnimeTitle {

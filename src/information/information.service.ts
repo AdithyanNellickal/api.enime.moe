@@ -4,6 +4,8 @@ import utc from 'dayjs/plugin/utc';
 import dayjs from 'dayjs';
 import { AIRING_ANIME } from './anilist-queries';
 import DatabaseService from '../database/database.service';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export default class InformationService {
@@ -11,7 +13,7 @@ export default class InformationService {
     private readonly anilistBaseEndpoint = "https://graphql.anilist.co";
     private readonly seasons = ["WINTER", "SPRING", "SUMMER", "FALL"];
 
-    constructor(private readonly databaseService: DatabaseService) {
+    constructor(private readonly databaseService: DatabaseService, @InjectQueue("enime") private readonly queue: Queue) {
         this.client = new GraphQLClient(this.anilistBaseEndpoint, {
             headers: {
                 "Content-Type": "application/json",
@@ -22,7 +24,7 @@ export default class InformationService {
         dayjs.extend(utc);
     };
 
-    async refetchAnime(): Promise<number> {
+    async refetchAnime(): Promise<string[]> {
         const currentSeason = Math.floor((new Date().getMonth() / 12 * 4)) % 4;
 
         let previousSeason = currentSeason - 1;
@@ -66,50 +68,77 @@ export default class InformationService {
             }
         }
 
-        for (let anime of trackingAnime) {
-            let nextEpisode = anime.nextAiringEpisode;
-            if (nextEpisode) nextEpisode = dayjs.unix(nextEpisode.airingAt).utc().toISOString();
+        let animeIds = [];
 
-            await this.databaseService.anime.upsert({
+        for (let anime of trackingAnime) {
+            let nextEpisode = anime.nextAiringEpisode, currentEpisode = 0;
+            if (nextEpisode) {
+                currentEpisode = nextEpisode.episode - 1;
+                nextEpisode = dayjs.unix(nextEpisode.airingAt).utc().toISOString();
+            } else {
+                if (anime.status === "FINISHED") {
+                    currentEpisode = anime.episodes;
+                }
+            }
+
+            let animeDb = await this.databaseService.anime.findUnique({
                 where: {
                     anilistId: anime.id
-                },
-                create: {
-                    title: anime.title,
-                    anilistId: anime.id,
-                    coverImage: anime.coverImage.extraLarge,
-                    status: anime.status,
-                    season: anime.season,
-                    next: nextEpisode,
-                    genre: {
-                        connectOrCreate: anime.genres.map(genre => {
-                            return {
-                                where: { name: genre },
-                                create: { name: genre }
-                            }
-                        })
-                    },
-                    synonyms: anime.synonyms
-                },
-                update: {
-                    coverImage: anime.coverImage.extraLarge,
-                    title: anime.title,
-                    status: anime.status,
-                    season: anime.season,
-                    next: nextEpisode,
-                    genre: {
-                        connectOrCreate: anime.genres.map(genre => {
-                            return {
-                                where: { name: genre },
-                                create: { name: genre }
-                            }
-                        })
-                    },
-                    synonyms: anime.synonyms
                 }
             });
+
+            if (!animeDb) { // Anime does not exist in our database, immediately push it to scrape
+                animeDb = await this.databaseService.anime.create({
+                    data: {
+                        title: anime.title,
+                        anilistId: anime.id,
+                        coverImage: anime.coverImage.extraLarge,
+                        status: anime.status,
+                        season: anime.season,
+                        next: nextEpisode,
+                        genre: {
+                            connectOrCreate: anime.genres.map(genre => {
+                                return {
+                                    where: { name: genre },
+                                    create: { name: genre }
+                                }
+                            })
+                        },
+                        currentEpisode: currentEpisode,
+                        synonyms: anime.synonyms
+                    }
+                });
+                animeIds.push(animeDb.id);
+            } else {
+                if (animeDb.currentEpisode !== currentEpisode) { // Anime exists in the database but current episode count from Anilist is not the one we stored in database. This means the anime might have updated, push it to scrape queue
+                    animeIds.push(animeDb.id);
+                }
+
+                animeDb = await this.databaseService.anime.update({
+                    where: {
+                        anilistId: anime.id
+                    },
+                    data: {
+                        coverImage: anime.coverImage.extraLarge,
+                        title: anime.title,
+                        status: anime.status,
+                        season: anime.season,
+                        next: nextEpisode,
+                        genre: {
+                            connectOrCreate: anime.genres.map(genre => {
+                                return {
+                                    where: { name: genre },
+                                    create: { name: genre }
+                                }
+                            })
+                        },
+                        currentEpisode: currentEpisode,
+                        synonyms: anime.synonyms
+                    }
+                })
+            }
         }
 
-        return trackingAnime.length;
+        return animeIds;
     }
 }
