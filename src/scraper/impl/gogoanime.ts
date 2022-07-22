@@ -94,6 +94,8 @@ export default class GogoanimeScraper extends Scraper {
 
         let embedUrl = $("iframe").first().attr("src");
 
+        if (!embedUrl || !episodeUrl) return undefined;
+
         return {
             url: `https://${embedUrl}`,
             title: undefined,

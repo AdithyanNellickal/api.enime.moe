@@ -1,4 +1,4 @@
-import { Logger, Module, OnModuleInit } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import ScraperService from '../scraper/scraper.service';
@@ -24,7 +24,6 @@ export default class InformationModule {
     constructor(@InjectQueue("enime") private readonly queue: Queue, private readonly databaseService: DatabaseService) {
         if (!process.env.TESTING) dayjs.extend(utc);
     }
-
 
     @Cron(CronExpression.EVERY_MINUTE)
     async updateAnime() {

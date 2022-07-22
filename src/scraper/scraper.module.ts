@@ -76,6 +76,8 @@ export default class ScraperModule implements OnModuleInit {
                     let scrapedEpisode = scraper.fetch(matchedAnimeEntry.path, i);
                     if (scrapedEpisode instanceof Promise) scrapedEpisode = await scrapedEpisode;
 
+                    if (!scrapedEpisode) continue;
+
                     let episodeDb = await this.databaseService.episode.findFirst({
                         where: {
                             AND: [
