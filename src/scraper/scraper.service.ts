@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import Scraper from './scraper';
-import fs from 'fs/promises';
-import path from 'path';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 import ProxyService from '../proxy/proxy.service';
 import DatabaseService from '../database/database.service';
 
@@ -20,7 +20,9 @@ export default class ScraperService implements OnModuleInit {
         for (const file of files) {
             const { default: ScraperModule } = await import(path.resolve(__dirname, "./impl", file));
 
-            this.importedScrapers.push(new ScraperModule(this.proxyService));
+            const scraper = new ScraperModule(this.proxyService);
+
+            if (scraper.enabled) this.importedScrapers.push(scraper);
         }
 
         for (const scraper of this.importedScrapers) {

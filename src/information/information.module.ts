@@ -58,12 +58,16 @@ export default class InformationModule {
                 }
             },
             include: {
-                episodes: true
+                episodes: {
+                    include: {
+                        sources: true
+                    }
+                }
             }
         });
 
         for (let anime of animeList) { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated"
-            if (anime.currentEpisode !== anime.episodes.length) await this.queue.add("scrape-anime-match", anime.id, {
+            if (anime.currentEpisode !== anime.episodes.filter(episode => episode.sources.length > 0).length) await this.queue.add("scrape-anime-match", anime.id, {
                 priority: 3,
                 removeOnComplete: true
             });

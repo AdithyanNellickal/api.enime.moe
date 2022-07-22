@@ -3,6 +3,8 @@ import fetch from 'node-fetch';
 import { Episode, AnimeWebPage, WebsiteMeta } from '../types/global';
 
 export default abstract class Scraper {
+    protected enabled = false;
+
     public websiteMeta: WebsiteMeta = undefined;
 
     constructor(private readonly proxyService: ProxyService) {}

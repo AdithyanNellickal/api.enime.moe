@@ -3,9 +3,12 @@ import * as cheerio from 'cheerio';
 import { AnimeWebPage, Episode, SourceType } from '../../types/global';
 import * as CryptoJS from 'crypto-js';
 import fetch from 'node-fetch';
+import * as similarity from 'string-similarity';
 
 // Credit to https://github.com/riimuru/gogoanime/blob/46edf3de166b7c5152919d6ac12ab6f55d9ed35b/lib/helpers/extractors/goload.js
 export default class GogoanimeScraper extends Scraper {
+    override enabled = true;
+
     ENCRYPTION_KEYS_URL =
         "https://raw.githubusercontent.com/justfoolingaround/animdl-provider-benchmarks/master/api/gogoanime.json";
 
@@ -106,7 +109,7 @@ export default class GogoanimeScraper extends Scraper {
     }
 
     async match(t): Promise<AnimeWebPage> {
-        let url = `${this.url()}/search.html?keyword=${encodeURI(t)}`;
+        let url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.romaji)}`;
 
         // Credit to https://github.com/AniAPI-Team/AniAPI/blob/main/ScraperEngine/resources/gogoanime.py
         const response = this.get(url, {}, true);
@@ -118,6 +121,10 @@ export default class GogoanimeScraper extends Scraper {
 
         let link = $(showElement).find(".name > a");
         let title = link.attr("title"), path = link.attr("href");
+
+        if (similarity.compareTwoStrings(t.romaji, title) < 0.9 && similarity.compareTwoStrings(t.english, title) < 0.9) { // If the best fit result from Gogoanime is not even 90% similar to what we wanted, the match is probably a failure
+            return undefined;
+        }
 
         return {
             title: title,

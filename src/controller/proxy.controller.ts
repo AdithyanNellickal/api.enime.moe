@@ -49,7 +49,7 @@ export default class ProxyController {
         if (!scraper) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
 
         const rawSourceUrl = await scraper.getRawSource(source.url);
-        await this.cacheManager.set(cacheKey, rawSourceUrl, { ttl: 1000 * 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
+        await this.cacheManager.set(cacheKey, rawSourceUrl, { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
 
         return res.redirect(302, rawSourceUrl);
     }

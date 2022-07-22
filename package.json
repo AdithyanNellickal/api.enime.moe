@@ -58,7 +58,8 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
-    "socks-proxy-agent": "^7.0.0"
+    "socks-proxy-agent": "^7.0.0",
+    "string-similarity": "^4.0.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",
@@ -77,6 +78,7 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "^16.0.0",
     "@types/node-fetch": "^2.6.2",
+    "@types/string-similarity": "^4.0.0",
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",

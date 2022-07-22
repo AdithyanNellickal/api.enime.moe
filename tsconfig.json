@@ -21,7 +21,7 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["mocha"]
+    "types": ["mocha", "./node_modules/@types"]
   },
   "include": [
     "./src/types/global.ts", "./src/**/*.d.ts"]

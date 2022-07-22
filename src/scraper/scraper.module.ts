@@ -49,8 +49,10 @@ export default class ScraperModule implements OnModuleInit {
         try {
             for (let scraper of this.scraperService.scrapers) {
                 // @ts-ignore
-                let matchedAnimeEntry = scraper.match(anime.title.romaji);
+                let matchedAnimeEntry = scraper.match(anime.title);
                 if (matchedAnimeEntry instanceof Promise) matchedAnimeEntry = await matchedAnimeEntry;
+
+                if (!matchedAnimeEntry) continue;
 
                 for (let i = 1; i <= anime.currentEpisode; i++) {
                     const episodeWithSource = await this.databaseService.episode.findFirst({
