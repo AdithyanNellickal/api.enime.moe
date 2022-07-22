@@ -21,7 +21,7 @@ export default class InformationService {
             }
         });
 
-        dayjs.extend(utc);
+        if (!process.env.TESTING) dayjs.extend(utc);
     };
 
     async refetchAnime(): Promise<string[]> {

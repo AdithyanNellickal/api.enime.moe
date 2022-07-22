@@ -20,9 +20,7 @@ describe("Gogoanime Scraper", () => {
         // TODO - Scraper logic and testing here
         const anime = await scraper.match("Lycoris Recoil");
 
-        for (let a of anime) {
-            await scraper.fetch(a.path, 1);
-        }
+        await scraper.fetch(anime.path, 1);
     }).timeout(0);
 
 }).timeout(0)

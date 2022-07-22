@@ -8,14 +8,17 @@ import ProxyService from './proxy/proxy.service';
 import ScraperModule from './scraper/scraper.module';
 import InformationModule from './information/information.module';
 import HealthModule from './health/health.module';
-import * as redisStore from 'cache-manager-ioredis';
+import * as redisStore from 'cache-manager-redis-store';
 import { BullModule } from '@nestjs/bull';
 import AnimeController from './controller/anime.controller';
 import ProxyController from './controller/proxy.controller';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from 'nestjs-throttler-storage-redis';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerBehindProxyGuard } from './guard/throtller-behind-proxy.guard';
+import ScraperService from './scraper/scraper.service';
+import { EnimeCacheInterceptor } from './cache/enime-cache.interceptor';
+import EpisodeController from './controller/episode.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -25,8 +28,7 @@ import { ThrottlerBehindProxyGuard } from './guard/throtller-behind-proxy.guard'
           store: redisStore,
           host: process.env.REDIS_HOST,
           port: Number(process.env.REDIS_PORT),
-          password: process.env.REDIS_PASSWORD,
-          isGlobal: true
+          password: process.env.REDIS_PASSWORD
       }),
       BullModule.forRoot({
         redis: {
@@ -45,11 +47,15 @@ import { ThrottlerBehindProxyGuard } from './guard/throtller-behind-proxy.guard'
           }),
       })
   ],
-  controllers: [AppController, AnimeController, ProxyController],
-  providers: [AppService, DatabaseService, ProxyService,
+  controllers: [AppController, AnimeController, ProxyController, EpisodeController],
+  providers: [AppService, DatabaseService, ProxyService, ScraperService,
       {
           provide: APP_GUARD,
           useClass: ThrottlerBehindProxyGuard,
+      },
+      {
+          provide: APP_INTERCEPTOR,
+          useClass: EnimeCacheInterceptor,
       }
   ],
 })

@@ -23,7 +23,7 @@ export default class GogoanimeScraper extends Scraper {
         };
     }
 
-    async generateEncryptAjaxParameters($, id) {
+    async generateEncryptAjaxParameters(text, id) {
         const keys = await this.fetchKeys();
         let iv = keys.iv;
         let key = keys.key;
@@ -32,7 +32,7 @@ export default class GogoanimeScraper extends Scraper {
             iv: iv,
         });
 
-        const script = $("script[data-name='episode']").data().value;
+        const script = text.match(/<script type="text\/javascript" src="[^"]+" data-name="episode" data-value="[^"]+"><\/script>/)[0].match(/data-value="[^"]+"/)[0].replace(/(data-value=)?"/, "");
         const token = CryptoJS.AES.decrypt(script, key, {
             iv: iv,
         }).toString(CryptoJS.enc.Utf8);
@@ -47,6 +47,33 @@ export default class GogoanimeScraper extends Scraper {
             })
         );
         return JSON.parse(decrypted);
+    }
+
+    override async getRawSource(sourceUrl, referer) {
+        const url = sourceUrl instanceof URL ? sourceUrl : new URL(sourceUrl);
+
+        const response = this.get(url.href, {
+            Referer: referer
+        }, true);
+
+        const params = await this.generateEncryptAjaxParameters(
+            await (await response).text(),
+            url.searchParams.get("id")
+        );
+
+        const fetchRes = await this.get(`${url.protocol}//${url.hostname}/encrypt-ajax.php?${params}`, {
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            true
+        );
+
+        const res = this.decryptEncryptAjaxResponse(await fetchRes.json());
+
+        let source = res.source.length ? res.source[0] : res.source_bk[0];
+
+        if (!source) return undefined;
+
+        return source.file;
     }
 
     async fetch(path: string, number: number): Promise<Episode> {
@@ -66,36 +93,13 @@ export default class GogoanimeScraper extends Scraper {
         $ = cheerio.load(await (await response).text());
 
         let embedUrl = $("iframe").first().attr("src");
-        const parsedEmbedUrl = new URL(`https://${embedUrl}`);
-
-        response = this.get(parsedEmbedUrl.href, {
-            Referer: episodeUrl
-        }, true);
-
-        const $$ = cheerio.load(await (await response).text());
-        const params = await this.generateEncryptAjaxParameters(
-            $$,
-            parsedEmbedUrl.searchParams.get("id")
-        );
-
-        const fetchRes = await this.get(`${parsedEmbedUrl.protocol}//${parsedEmbedUrl.hostname}/encrypt-ajax.php?${params}`, {
-                "X-Requested-With": "XMLHttpRequest",
-            },
-            true
-        );
-
-        const res = this.decryptEncryptAjaxResponse(await fetchRes.json());
-
-        let source = res.source.length ? res.source[0] : res.source_bk[0];
-
-        if (!source) return undefined;
 
         return {
-            url: source.file,
+            url: `https://${embedUrl}`,
             title: undefined,
-            format: source.file.split(/[#?]/)[0].split('.').pop().trim(),
+            format: "m3u8", // Gogoanime only hosts M3U8
             referer: episodeUrl,
-            type: SourceType.PROXY
+            type: SourceType.PROXY // We have to proxy the url in database every time
         };
     }
 

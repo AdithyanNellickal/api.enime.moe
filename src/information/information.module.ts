@@ -1,4 +1,4 @@
-import { Logger, Module } from '@nestjs/common';
+import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import ScraperService from '../scraper/scraper.service';
@@ -10,19 +10,21 @@ import { BullModule, InjectQueue } from '@nestjs/bull';
 import { fork } from 'child_process';
 import InformationService from './information.service';
 import { Queue } from 'bull';
+import ProxyService from '../proxy/proxy.service';
 
 @Module({
     imports: [BullModule.registerQueue({
         name: "enime"
     })],
-    providers: [DatabaseService, InformationService, ScraperService]
+    providers: [DatabaseService, InformationService, ScraperService, ProxyService]
 })
 export default class InformationModule {
     private informationWorker;
 
     constructor(@InjectQueue("enime") private readonly queue: Queue, private readonly databaseService: DatabaseService) {
-        dayjs.extend(utc);
+        if (!process.env.TESTING) dayjs.extend(utc);
     }
+
 
     @Cron(CronExpression.EVERY_MINUTE)
     async updateAnime() {
@@ -61,7 +63,7 @@ export default class InformationModule {
             }
         });
 
-        for (let anime of animeList) { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated
+        for (let anime of animeList) { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated"
             if (anime.currentEpisode !== anime.episodes.length) await this.queue.add("scrape-anime-match", anime.id, {
                 priority: 3,
                 removeOnComplete: true

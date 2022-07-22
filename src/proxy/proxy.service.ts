@@ -64,26 +64,24 @@ export default class ProxyService implements OnModuleInit {
         if (proxyListResponse?.results) {
             const proxies: ProxyCallback[] = proxyListResponse.results;
 
-            await this.databaseService.proxy.deleteMany();
-
-            const mappedProxies = proxies.map(proxy => {
-                return {
-                    username: proxy.username,
-                    password: proxy.password,
-                    port_http: proxy.ports.http,
-                    port_socks5: proxy.ports.socks5,
-                    address: proxy.proxy_address,
-                    country: proxy.country_code,
-                    city: proxy.city_name,
-                    used: 0,
-                }
-            });
-
-            await this.databaseService.proxy.createMany({
-                data: mappedProxies
-            });
+            await this.databaseService.$transaction([
+                this.databaseService.proxy.deleteMany(),
+                this.databaseService.proxy.createMany({
+                    data: proxies.map(proxy => {
+                        return {
+                            username: proxy.username,
+                            password: proxy.password,
+                            port_http: proxy.ports.http,
+                            port_socks5: proxy.ports.socks5,
+                            address: proxy.proxy_address,
+                            country: proxy.country_code,
+                            city: proxy.city_name,
+                            used: 0,
+                        }
+                    })
+                })
+            ])
         }
-
         this.loading = false;
     }
 

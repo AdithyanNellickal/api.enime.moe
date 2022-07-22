@@ -19,6 +19,10 @@ export default abstract class Scraper {
 
     abstract fetch(path: string, number: number): Episode | Promise<Episode>;
 
+    async getRawSource(sourceUrl: string | URL, referer = undefined): Promise<string> {
+        return undefined;
+    }
+
     async get(url, headers = {}, proxy = false) {
         let agent = undefined;
 

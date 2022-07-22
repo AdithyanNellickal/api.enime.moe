@@ -1,14 +1,10 @@
 import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import ProxyService from '../proxy/proxy.service';
 import DatabaseService from '../database/database.service';
-import fs from 'fs/promises';
-import path from 'path';
 import { BullModule, Process, Processor } from '@nestjs/bull';
 import ScraperService from './scraper.service';
 import { Job } from 'bull';
-import Scraper from './scraper';
 import InformationModule from '../information/information.module';
-import S3 from 'aws-sdk/clients/s3';
 import fetch from 'node-fetch';
 import cuid from 'cuid';
 import { SourceType } from '../types/global';
@@ -24,50 +20,14 @@ import mime from 'mime-types';
 })
 @Processor("enime")
 export default class ScraperModule implements OnModuleInit {
-    importedScrapers: Scraper[] = [];
     S3 = undefined;
 
-    constructor(private readonly proxyService: ProxyService, private readonly databaseService: DatabaseService) {
-        this.S3 = new S3({
-            endpoint: process.env.S3_ENDPOINT,
-            accessKeyId: process.env.S3_ACCESS_KEY_ID,
-            secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-            signatureVersion: 'v4',
-        });
-
-        dayjs.extend(utc);
+    constructor(private readonly proxyService: ProxyService, private readonly databaseService: DatabaseService, private readonly scraperService: ScraperService) {
+        if (!process.env.TESTING) dayjs.extend(utc);
     }
 
     async onModuleInit() {
-
         if (process.env.TESTING) return;
-
-        const files = (await fs.readdir(path.resolve(__dirname, "./impl"))).filter(file => {
-            return path.extname(file).toLowerCase() === ".js" || path.extname(file).toLowerCase() === ".ts";
-        });
-        for (const file of files) {
-            const { default: ScraperModule } = await import(path.resolve(__dirname, "./impl", file));
-
-            this.importedScrapers.push(new ScraperModule(this.proxyService));
-        }
-
-        for (const scraper of this.importedScrapers) {
-            const website = await this.databaseService.website.upsert({
-                where: {
-                    url: scraper.url()
-                },
-                create: {
-                    url: scraper.url(),
-                    locale: scraper.locale(),
-                    name: scraper.name()
-                },
-                update: {}
-            });
-
-            scraper.websiteMeta = {
-                id: website.id
-            }
-        }
     }
 
     @Process("scrape-anime-match")
@@ -87,7 +47,7 @@ export default class ScraperModule implements OnModuleInit {
         }
 
         try {
-            for (let scraper of this.importedScrapers) {
+            for (let scraper of this.scraperService.scrapers) {
                 // @ts-ignore
                 let matchedAnimeEntry = scraper.match(anime.title.romaji);
                 if (matchedAnimeEntry instanceof Promise) matchedAnimeEntry = await matchedAnimeEntry;
@@ -154,29 +114,6 @@ export default class ScraperModule implements OnModuleInit {
 
                     let url = scrapedEpisode.url;
                     let scrapedEpisodeId = cuid();
-
-                    if (scrapedEpisode.type === SourceType.PROXY) {
-                        const response = await fetch(url)
-                        const contentType = response.headers.get("content-type") ?? undefined;
-                        const contentLength =
-                            response.headers.get("content-length") != null
-                                ? Number(response.headers.get("content-length"))
-                                : undefined;
-
-                        const key = `${scrapedEpisodeId}.${mime.extension(contentType) || scrapedEpisode.format}`;
-
-                        await this.S3
-                            .putObject({
-                                Bucket: process.env.S3_BUCKET_NAME,
-                                Key: key,
-                                ContentType: contentType,
-                                ContentLength: contentLength,
-                                Body: response.body,
-                            })
-                            .promise();
-                    }
-
-                    url = scrapedEpisode.type === SourceType.DIRECT ? scrapedEpisode.url : `https://api.enime.moe/proxy/source/${scrapedEpisodeId}.${scrapedEpisode.format}`;
 
                     let scrapedEpisodeDb = await this.databaseService.source.findUnique({
                         where: {
