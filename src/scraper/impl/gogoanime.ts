@@ -79,7 +79,7 @@ export default class GogoanimeScraper extends Scraper {
         return source.file;
     }
 
-    async fetch(path: string, number: number): Promise<Episode> {
+    async fetch(path: string, startNumber: number, endNumber: number): Promise<Episode[]> {
         let url = `${this.url()}${path}`;
 
         let response = this.get(url, {}, true);
@@ -87,44 +87,73 @@ export default class GogoanimeScraper extends Scraper {
 
         const movieId = $("#movie_id").attr("value");
 
-        url = `https://ajax.gogo-load.com/ajax/load-list-episode?ep_start=${number}&ep_end=${number}&id=${movieId}`;
+        url = `https://ajax.gogo-load.com/ajax/load-list-episode?ep_start=${startNumber}&ep_end=${endNumber}&id=${movieId}`;
         response = this.get(url, {}, true);
         $ = cheerio.load(await (await response).text());
 
-        const episodeUrl = $("a").attr("href");
-        response = this.get(`${this.url()}${episodeUrl}`.replaceAll(" ", ""), {}, true);
-        $ = cheerio.load(await (await response).text());
+        const episodesSource = [];
 
-        let embedUrl = $("iframe").first().attr("src");
+        $("#episode_related > li").each((i, el) => {
+            episodesSource.push({
+                number: parseInt($(el).find(`div.name`).text().replace("EP ", "")),
+                url: `${this.url()}/${$(el).find(`a`).attr('href')?.trim()}`,
+            });
+        });
 
-        if (!embedUrl || !episodeUrl) return undefined;
+        const episodesMapped = [];
 
-        return {
-            url: `https://${embedUrl}`,
-            title: undefined,
-            format: "m3u8", // Gogoanime only hosts M3U8
-            referer: episodeUrl,
-            type: SourceType.PROXY // We have to proxy the url in database every time
-        };
+        for (let episode of episodesSource) {
+            if (!episode.url) continue;
+
+            let embedResponse = this.get(episode.url, {}, true);
+            let $$ = cheerio.load(await (await embedResponse).text());
+
+            let embedUrl = $$("iframe").first().attr("src");
+
+            if (!embedUrl) continue;
+
+            episodesMapped.push({
+                ...episode,
+                url: `https:${embedUrl}`,
+                title: undefined,
+                format: "m3u8",
+                referer: episode.url,
+                type: SourceType.PROXY
+            })
+        }
+
+        return episodesMapped;
     }
 
     async match(t): Promise<AnimeWebPage> {
-        let url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.english || t.romaji)}`;
+        let url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.english)}`;
 
         // Credit to https://github.com/AniAPI-Team/AniAPI/blob/main/ScraperEngine/resources/gogoanime.py
-        const response = this.get(url, {}, true);
-        const $ = cheerio.load(await (await response).text());
+        let response = this.get(url, {}, true);
+        let $ = cheerio.load(await (await response).text());
 
-        const showElement = $(".last_episodes > ul > li").first();
+        let showElement = $(".last_episodes > ul > li").first();
 
-        if (!showElement) return undefined;
+        if (!showElement.length) {
+            url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.romaji)}`;
+            response = this.get(url, {}, true);
+            $ = cheerio.load(await (await response).text());
+
+            showElement = $(".last_episodes > ul > li").first();
+
+            if (!showElement.length) return undefined;
+        }
 
         let link = $(showElement).find(".name > a");
         let title = link.attr("title"), path = link.attr("href");
 
-        if (similarity.compareTwoStrings(t.romaji, title) < 0.9 && similarity.compareTwoStrings(t.english, title) < 0.9) { // If the best fit result from Gogoanime is not even 90% similar to what we wanted, the match is probably a failure
-            return undefined;
-        }
+        // Bruh..
+        let pass = false;
+
+        if (t.english && similarity.compareTwoStrings(t.english, title) >= 0.9) pass = true;
+        if (t.romaji && similarity.compareTwoStrings(t.romaji, title) >= 0.9) pass = true;
+
+        if (!pass) return undefined;
 
         return {
             title: title,

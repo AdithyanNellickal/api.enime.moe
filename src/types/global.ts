@@ -11,6 +11,7 @@ export interface AnimeWebPage {
 export interface Episode {
     title?: string;
     url: string;
+    number?: number;
     resolution?: string;
     format?: string;
     referer?: string;

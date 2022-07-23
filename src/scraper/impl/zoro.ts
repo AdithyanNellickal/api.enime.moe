@@ -32,10 +32,16 @@ export default class Zoro extends Scraper {
         // then after that, find the best match entry based on both english and romaji title
         // However, if both matches have <90% similarity then the match is probably a failure
         let bestResult = similarity.findBestMatch(t.english || t.romaji, results.map(r => r.title));
-        if (bestResult.bestMatch.rating < 0.9) {
-            bestResult = similarity.findBestMatch(t.english, results.map(r => r.title));
+        if (bestResult.bestMatch.rating < 0.9) { // Either english or romaji < 90%
+            let alt = t.english ? t.romaji : t.romaji ? t.english : undefined;
 
-            if (bestResult.bestMatch.rating < 0.9) return undefined;
+            if (alt) {
+                bestResult = similarity.findBestMatch(alt, results.map(r => r.title));
+
+                if (bestResult.bestMatch.rating < 0.9) return undefined;
+            } else {
+                return undefined;
+            }
         }
 
         return results.find(r => r.title === bestResult.bestMatch.target); // Can't possibly be undefined..

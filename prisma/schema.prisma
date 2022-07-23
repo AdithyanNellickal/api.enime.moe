@@ -39,6 +39,8 @@ model Anime {
     genre               Genre[]
     synonyms            String[]
     lastEpisodeUpdate   DateTime?
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
 
     @@map("anime")
 }
@@ -58,6 +60,8 @@ model Episode {
     number      Int
     title       String?
     sources     Source[]
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
 
     @@map("episode")
 }
@@ -73,6 +77,8 @@ model Source {
     referer     String?
     resolution  String?
     format      String?
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
 
     @@map("source")
 }

@@ -75,10 +75,13 @@ export default class ScraperModule implements OnModuleInit {
                         continue;
                     }
 
-                    let scrapedEpisode = scraper.fetch(matchedAnimeEntry.path, i);
+                    let scrapedEpisode = scraper.fetch(matchedAnimeEntry.path, i, i);
                     if (scrapedEpisode instanceof Promise) scrapedEpisode = await scrapedEpisode;
 
                     if (!scrapedEpisode) continue;
+
+                    // TODO - We can optimize this by utilizing episode range fetch for websites like Gogoanime
+                    if (Array.isArray(scrapedEpisode)) scrapedEpisode = scrapedEpisode[0];
 
                     let episodeDb = await this.databaseService.episode.findFirst({
                         where: {
@@ -156,7 +159,8 @@ export default class ScraperModule implements OnModuleInit {
                 }
             }
         } catch (e) {
-            Logger.error(e)
+            Logger.error(e);
+            Logger.error(e.stack);
         }
     }
 }

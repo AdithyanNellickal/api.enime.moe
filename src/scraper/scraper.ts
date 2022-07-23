@@ -19,7 +19,7 @@ export default abstract class Scraper {
 
     abstract match(title): AnimeWebPage | Promise<AnimeWebPage>;
 
-    abstract fetch(path: string, number: number): Episode | Promise<Episode>;
+    abstract fetch(path: string, number: number, endNumber: number | undefined): Episode | Promise<Episode> | Promise<Episode[]> | Episode[];
 
     async getRawSource(sourceUrl: string | URL, referer = undefined): Promise<string> {
         return undefined;
