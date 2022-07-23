@@ -148,6 +148,7 @@ export default class ScraperModule implements OnModuleInit {
                         })
                     }
 
+                    Logger.debug(`Updated an anime with episode number ${episodeDb.number} under anime ${anime.id}`);
                     await this.databaseService.anime.update({
                         where: {
                             id: anime.id

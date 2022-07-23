@@ -126,11 +126,7 @@ export default class GogoanimeScraper extends Scraper {
     }
 
     async match(t): Promise<AnimeWebPage> {
-        return this.match0(t);
-    }
-
-    async match0(t): Promise<AnimeWebPage> {
-        let original = t.original, special = t.special;
+        let original = !t.current, special = t.special;
 
         if (original) t.current = t.english;
 
@@ -157,20 +153,20 @@ export default class GogoanimeScraper extends Scraper {
 
                 t.original = false;
 
-                return this.match0(t);
+                return this.match(t);
             }
 
             if (t.current === t.english && t.romaji) {
                 t.current = t.romaji;
                 t.original = false;
 
-                return this.match0(t);
+                return this.match(t);
             }
 
             if (t.current === t.romaji) {
                 t.special = true;
 
-                return this.match0(t);
+                return this.match(t);
             }
         }
 
@@ -194,7 +190,7 @@ export default class GogoanimeScraper extends Scraper {
             path: path
         };
     }
-
+    
     clean(title) {
         return title.replaceAll(/(th|rd|nd|st) (Season)/gmi, "").replaceAll(/\([^\(]*\)$/gmi, "").trimEnd();
     }
