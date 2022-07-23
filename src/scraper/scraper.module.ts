@@ -82,6 +82,7 @@ export default class ScraperModule implements OnModuleInit {
 
                     // TODO - We can optimize this by utilizing episode range fetch for websites like Gogoanime
                     if (Array.isArray(scrapedEpisode)) scrapedEpisode = scrapedEpisode[0];
+                    if (!scrapedEpisode) continue;
 
                     let episodeDb = await this.databaseService.episode.findFirst({
                         where: {

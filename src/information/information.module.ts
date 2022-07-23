@@ -18,11 +18,18 @@ import ProxyService from '../proxy/proxy.service';
     })],
     providers: [DatabaseService, InformationService, ScraperService, ProxyService]
 })
-export default class InformationModule {
+export default class InformationModule implements OnModuleInit {
     private informationWorker;
 
     constructor(@InjectQueue("enime") private readonly queue: Queue, private readonly databaseService: DatabaseService) {
         if (!process.env.TESTING) dayjs.extend(utc);
+    }
+
+    async onModuleInit() {
+        await this.queue.add("scrape-anime-match", "cl5xgvv6r05602tmnuwq3wzp4", {
+            priority: 4,
+            removeOnComplete: true
+        });
     }
 
     @Cron(CronExpression.EVERY_MINUTE)
