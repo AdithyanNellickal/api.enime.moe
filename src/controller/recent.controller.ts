@@ -32,6 +32,16 @@ export default class RecentController {
             },
         }, { page: page })
 
-        return recent.data;
+        return recent.data.map(episode => {
+            return {
+                ...episode,
+                sources: episode.sources.map(source => {
+                    return {
+                        ...source,
+                        url: `https://api.enime.moe/proxy/source/${source.id}`
+                    }
+                })
+            }
+        });
     }
 }
