@@ -25,7 +25,7 @@ export default class InformationModule {
         if (!process.env.TESTING) dayjs.extend(utc);
     }
 
-    // @Cron(CronExpression.EVERY_MINUTE)
+    @Cron(CronExpression.EVERY_MINUTE)
     async updateAnime() {
         Logger.debug("Now we start refetching currently releasing anime from Anilist");
         performance.mark("information-fetch-start");
@@ -49,7 +49,7 @@ export default class InformationModule {
     }
 
     // Every 10 minutes, we check anime that have don't have "enough episode" stored in the database (mostly the anime source sites update slower than Anilist because subs stuff) so we sync that part more frequently
-    // @Cron(CronExpression.EVERY_10_MINUTES)
+    @Cron(CronExpression.EVERY_10_MINUTES)
     async checkForUpdatedEpisodes() {
         const animeList = await this.databaseService.anime.findMany({
             where: {
@@ -74,7 +74,7 @@ export default class InformationModule {
         }
     }
 
-    // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     async pushToScrapeQueue() {
         const eligibleToScrape = await this.databaseService.anime.findMany({
             where: {
