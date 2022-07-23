@@ -141,7 +141,7 @@ export default class GogoanimeScraper extends Scraper {
         let showElement = $(".last_episodes > ul > li").first();
 
         if (!showElement.length) {
-            if (original && !separated && (t.english?.includes(":") || t.romaji?.includes(":"))) return this.match0(t.english ? t.english.split(":")[0] : t.romaji.split(":")[0], t.english || t.romaji,true);
+            if (original && !separated && (t.english?.includes(":") || t.romaji?.includes(":"))) return this.match0(t.english?.includes(":") ? t.english.split(":")[0] : t.romaji.split(":")[0], t.english || t.romaji,true);
 
             return this.match0(t.romaji);
         }
