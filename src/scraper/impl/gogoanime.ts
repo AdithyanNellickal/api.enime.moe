@@ -151,14 +151,15 @@ export default class GogoanimeScraper extends Scraper {
 
         // Bruh..
         let pass = false;
+        let cleanedTitle = this.clean(title)
 
         if (original) {
-            if (t.english && similarity.compareTwoStrings(t.english, title) >= 0.6) pass = true;
-            if (t.romaji && similarity.compareTwoStrings(t.romaji, title) >= 0.6) pass = true;
+            if (t.english && similarity.compareTwoStrings(t.english, cleanedTitle) >= 0.6) pass = true;
+            if (t.romaji && similarity.compareTwoStrings(t.romaji, cleanedTitle) >= 0.6) pass = true;
         } else {
             if (originalT) t = originalT;
 
-            if (t && similarity.compareTwoStrings(t, title) >= 0.6) pass = true;
+            if (t && similarity.compareTwoStrings(t, cleanedTitle) >= 0.6) pass = true;
         }
 
         if (!pass) return undefined;
@@ -167,6 +168,10 @@ export default class GogoanimeScraper extends Scraper {
             title: title,
             path: path
         };
+    }
+
+    clean(title) {
+        return title.replaceAll(/(th|rd|nd|st) (Season)/gmi, "").replaceAll(/\([^\(]*\)$/gmi, "").trimEnd();
     }
 
     name(): string {

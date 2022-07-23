@@ -22,8 +22,8 @@ describe("Scraper Test", function () {
         const scraper = new GogoanimeScraper(application.get(ProxyService));
 
         const anime = await scraper.match({
-            english: "Tensei Kenja no Isekai Life: Daini no Shokugyo wo Ete, Sekai Saikyou ni Narimashita",
-            romaji: "My Isekai Life: I Gained a Second Character Class and Became the Strongest Sage in the World!"
+            english: "Kingdom Season 4",
+            romaji: "Kingdom 4"
         });
 
         console.log(anime)
