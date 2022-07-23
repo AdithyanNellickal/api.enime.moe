@@ -54,10 +54,10 @@ export default class AnimeController {
 
     @Get(":id")
     @CacheTTL(300)
-    async get(@Param() params) {
+    async get(@Param("id") id) {
         const anime = await this.databaseService.anime.findUnique({
             where: {
-                id: params.id
+                id: id
             },
             include: {
                 genre: {

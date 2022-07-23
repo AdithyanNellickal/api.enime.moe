@@ -19,6 +19,7 @@ import { ThrottlerBehindProxyGuard } from './guard/throtller-behind-proxy.guard'
 import ScraperService from './scraper/scraper.service';
 import { EnimeCacheInterceptor } from './cache/enime-cache.interceptor';
 import EpisodeController from './controller/episode.controller';
+import RecentController from './controller/recent.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -47,7 +48,7 @@ import EpisodeController from './controller/episode.controller';
           }),
       })
   ],
-  controllers: [AppController, AnimeController, ProxyController, EpisodeController],
+  controllers: [AppController, AnimeController, ProxyController, RecentController, EpisodeController],
   providers: [AppService, DatabaseService, ProxyService, ScraperService,
       {
           provide: APP_GUARD,

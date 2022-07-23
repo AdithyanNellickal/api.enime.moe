@@ -179,6 +179,8 @@ export default class GogoanimeScraper extends Scraper {
 
         // Bruh..
         let pass = false;
+        if (!title) return undefined;
+
         let cleanedTitle = this.clean(title)
 
         if (t.english && similarity.compareTwoStrings(t.english, cleanedTitle) >= 0.6) pass = true;

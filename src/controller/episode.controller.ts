@@ -10,10 +10,10 @@ export default class EpisodeController {
 
     @Get(":id")
     @CacheTTL(300)
-    async get(@Param() params) {
+    async get(@Param("id") id) {
         const episode = await this.databaseService.episode.findUnique({
             where: {
-                id: params.id
+                id: id
             },
             select: {
                 id: true,

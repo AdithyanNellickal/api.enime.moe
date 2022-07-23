@@ -63,6 +63,7 @@ specifiers:
   node-fetch: 2.6.7
   prettier: ^2.3.2
   prisma: ^4.1.0
+  prisma-pagination: ^0.2.3
   reflect-metadata: ^0.1.13
   rimraf: ^3.0.2
   rxjs: ^7.2.0
@@ -110,6 +111,7 @@ dependencies:
   mime-types: 2.1.35
   nestjs-throttler-storage-redis: 0.1.20_284e0ec87fb584f56eb9e8e7f881621e
   node-fetch: 2.6.7
+  prisma-pagination: 0.2.3
   reflect-metadata: 0.1.13
   rimraf: 3.0.2
   rxjs: 7.5.6
@@ -5840,6 +5842,10 @@ packages:
       ansi-styles: 5.2.0
       react-is: 17.0.2
     dev: true
+
+  /prisma-pagination/0.2.3:
+    resolution: {integrity: sha512-KVKCGz5BVTYK64dpqCo7ITNFN02UN5hSzBYyR4vqNF7I4BetUeO/q7B7FECmCOPIyCBWYf2Zte68pD9S2khD3g==}
+    dev: false
 
   /prisma/4.1.0:
     resolution: {integrity: sha512-iwqpAT6In1uvMSwQAM3PqmaBdhh2OaQ/2t+n3RjpW4vAKP3R7E1T34FZUU4zGOWtMWm5dt0sPThQkT/h87r6gw==}
