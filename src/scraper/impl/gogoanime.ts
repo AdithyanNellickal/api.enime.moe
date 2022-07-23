@@ -96,7 +96,7 @@ export default class GogoanimeScraper extends Scraper {
         $("#episode_related > li").each((i, el) => {
             episodesSource.push({
                 number: parseInt($(el).find(`div.name`).text().replace("EP ", "")),
-                url: `${this.url()}/${$(el).find(`a`).attr('href')?.trim()}`,
+                url: `${this.url()}${$(el).find(`a`).attr('href')?.trim()}`,
             });
         });
 
