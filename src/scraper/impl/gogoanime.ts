@@ -126,7 +126,7 @@ export default class GogoanimeScraper extends Scraper {
     }
 
     async match(t): Promise<AnimeWebPage> {
-        let url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.english)}`;
+        let url = `${this.url()}/search.html?keyword=${encodeURIComponent(t.english)}`;
 
         // Credit to https://github.com/AniAPI-Team/AniAPI/blob/main/ScraperEngine/resources/gogoanime.py
         let response = this.get(url, {}, true);
@@ -135,7 +135,7 @@ export default class GogoanimeScraper extends Scraper {
         let showElement = $(".last_episodes > ul > li").first();
 
         if (!showElement.length) {
-            url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.romaji)}`;
+            url = `${this.url()}/search.html?keyword=${encodeURIComponent(t.romaji)}`;
             response = this.get(url, {}, true);
             $ = cheerio.load(await (await response).text());
 
@@ -150,8 +150,8 @@ export default class GogoanimeScraper extends Scraper {
         // Bruh..
         let pass = false;
 
-        if (t.english && similarity.compareTwoStrings(t.english, title) >= 0.9) pass = true;
-        if (t.romaji && similarity.compareTwoStrings(t.romaji, title) >= 0.9) pass = true;
+        if (t.english && similarity.compareTwoStrings(t.english, title) >= 0.6) pass = true;
+        if (t.romaji && similarity.compareTwoStrings(t.romaji, title) >= 0.6) pass = true;
 
         if (!pass) return undefined;
 

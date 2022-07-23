@@ -17,17 +17,21 @@ describe("Scraper Test", function () {
         await application.init();
     });
 
-    /*
+
     it("Gogoanime Scraper", async () => {
         const scraper = new GogoanimeScraper(application.get(ProxyService));
 
-        const anime = await scraper.match("Lycoris Recoil");
+        const anime = await scraper.match({
+            english: "Rent-A-Girlfriend Season 2",
+            romaji: "Kanojo, Okarishimasu 2"
+        });
 
-        await scraper.fetch(anime.path, 1);
+        console.log(anime)
+        //await scraper.fetch(anime.path, 1);
     }).timeout(0);
 
-     */
 
+    /*
     it("Zoro.to Scraper", async () => {
         const scraper = new Zoro(application.get(ProxyService));
 
@@ -40,4 +44,6 @@ describe("Scraper Test", function () {
         console.log(anime)
         // await scraper.fetch(anime.path, 1);
     });
+
+     */
 });
