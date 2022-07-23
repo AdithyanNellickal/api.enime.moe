@@ -126,7 +126,13 @@ export default class GogoanimeScraper extends Scraper {
     }
 
     async match(t): Promise<AnimeWebPage> {
-        let url = `${this.url()}/search.html?keyword=${encodeURIComponent(t.english)}`;
+        return this.match0(t);
+    }
+
+    async match0(t, originalT = undefined, separated = false): Promise<AnimeWebPage> {
+        let original = t instanceof Object; // Very first request sent from server, not including reroutes
+
+        let url = `${this.url()}/search.html?keyword=${encodeURIComponent(original ? t.english : t)}`;
 
         // Credit to https://github.com/AniAPI-Team/AniAPI/blob/main/ScraperEngine/resources/gogoanime.py
         let response = this.get(url, {}, true);
@@ -135,13 +141,9 @@ export default class GogoanimeScraper extends Scraper {
         let showElement = $(".last_episodes > ul > li").first();
 
         if (!showElement.length) {
-            url = `${this.url()}/search.html?keyword=${encodeURIComponent(t.romaji)}`;
-            response = this.get(url, {}, true);
-            $ = cheerio.load(await (await response).text());
+            if (!separated && t.english.includes(":")) return this.match0(t.english.split(":")[0], t.english,true);
 
-            showElement = $(".last_episodes > ul > li").first();
-
-            if (!showElement.length) return undefined;
+            return this.match0(t.romaji);
         }
 
         let link = $(showElement).find(".name > a");
@@ -150,8 +152,14 @@ export default class GogoanimeScraper extends Scraper {
         // Bruh..
         let pass = false;
 
-        if (t.english && similarity.compareTwoStrings(t.english, title) >= 0.6) pass = true;
-        if (t.romaji && similarity.compareTwoStrings(t.romaji, title) >= 0.6) pass = true;
+        if (original) {
+            if (t.english && similarity.compareTwoStrings(t.english, title) >= 0.6) pass = true;
+            if (t.romaji && similarity.compareTwoStrings(t.romaji, title) >= 0.6) pass = true;
+        } else {
+            if (originalT) t = originalT;
+
+            if (t && similarity.compareTwoStrings(t, title) >= 0.6) pass = true;
+        }
 
         if (!pass) return undefined;
 
