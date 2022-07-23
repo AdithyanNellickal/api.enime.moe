@@ -109,7 +109,7 @@ export default class GogoanimeScraper extends Scraper {
     }
 
     async match(t): Promise<AnimeWebPage> {
-        let url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.romaji)}`;
+        let url = `${this.url()}/search.html?keyword=${decodeURIComponent(t.english || t.romaji)}`;
 
         // Credit to https://github.com/AniAPI-Team/AniAPI/blob/main/ScraperEngine/resources/gogoanime.py
         const response = this.get(url, {}, true);
