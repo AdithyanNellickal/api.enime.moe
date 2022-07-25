@@ -30,7 +30,7 @@ export default class ProxyController {
         const cacheKey = `proxy-source-${id}`;
 
         let cachedSource = await this.cacheManager.get(cacheKey);
-        if (cachedSource) return cachedSource;
+        if (cachedSource) return res.send(cachedSource as string);
 
         const source = await this.databaseService.source.findUnique({
             where: {
@@ -41,15 +41,17 @@ export default class ProxyController {
         if (!source) throw new NotFoundException("The source does not exist.");
 
         if (source.type === "DIRECT") { // No need to proxy the request, redirect to raw source directly
-            return res.redirect(302, source.url);
+            return res.send(source.url);
         }
 
         const scraper = this.scraperService.scrapers.find(s => s.websiteMeta.id === source.websiteId);
         if (!scraper) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
 
         const rawSourceUrl = await scraper.getRawSource(source.url);
+        if (!rawSourceUrl) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
+
         await this.cacheManager.set(cacheKey, rawSourceUrl, { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
 
-        return rawSourceUrl;
+        return res.send(cachedSource);
     }
 }
