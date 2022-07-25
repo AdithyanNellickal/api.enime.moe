@@ -27,8 +27,10 @@ model Proxy {
 
 model Anime {
     id                  String          @id  @default(cuid())
+    slug                String?         @unique
     anilistId           Int             @unique
     coverImage          String?
+    bannerImage         String?
     status              AiringStatus
     season              AiringSeason
     title               Json
@@ -39,6 +41,15 @@ model Anime {
     genre               Genre[]
     synonyms            String[]
     lastEpisodeUpdate   DateTime?
+    description         String?
+    duration            Int?
+    averageScore        Int?
+    color               String?
+
+    // Exists solely for search purpose
+    title_english       String?
+    title_romaji        String?
+
     createdAt   DateTime   @default(now())
     updatedAt   DateTime   @updatedAt
 

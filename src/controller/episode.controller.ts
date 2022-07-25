@@ -27,7 +27,7 @@ export default class EpisodeController {
             }
         });
 
-        if (!episode) throw new NotFoundException(`The episode with ID ${params.id} does not exist`);
+        if (!episode) throw new NotFoundException(`The episode with ID ${id} does not exist`);
 
         return {
             ...episode,

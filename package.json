@@ -59,6 +59,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
+    "slugify": "^1.6.5",
     "socks-proxy-agent": "^7.0.0",
     "string-similarity": "^4.0.4"
   },

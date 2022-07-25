@@ -2,6 +2,8 @@ import { CacheInterceptor, ExecutionContext } from '@nestjs/common';
 
 export class EnimeCacheInterceptor extends CacheInterceptor {
     protected isRequestCacheable(context: ExecutionContext): boolean {
+        if (!process.env.PRODUCTION) return false;
+
         const http = context.switchToHttp();
         const request = http.getRequest();
 

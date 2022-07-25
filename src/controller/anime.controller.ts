@@ -34,6 +34,9 @@ export default class AnimeController {
         });
 
         return all.map(anime => {
+            delete anime["title_english"];
+            delete anime["title_romaji"];
+
             return {
                 ...anime,
                 genre: anime.genre.map(g => g.name),
@@ -80,7 +83,10 @@ export default class AnimeController {
             }
         });
 
-        if (!anime) throw new NotFoundException(`The anime with ID ${params.id} does not exist`);
+        if (!anime) throw new NotFoundException(`The anime with ID ${id} does not exist`);
+
+        delete anime["title_english"];
+        delete anime["title_romaji"];
 
         return {
             ...anime,

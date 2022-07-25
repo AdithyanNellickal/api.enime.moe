@@ -15,7 +15,6 @@ import { Cache } from 'cache-manager';
 import { EnimeCacheInterceptor } from '../cache/enime-cache.interceptor';
 
 @Controller("/proxy")
-@UseInterceptors(EnimeCacheInterceptor)
 @Injectable()
 export default class ProxyController {
 

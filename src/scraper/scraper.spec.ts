@@ -21,12 +21,10 @@ describe("Scraper Test", function () {
     it("Gogoanime Scraper", async () => {
         const scraper = new GogoanimeScraper(application.get(ProxyService));
 
-        console.log("???")
-
         const anime = await scraper.match({
-                "native": "リコリス・リコイル",
-                "romaji": "Lycoris Recoil",
-                "english": "Lycoris Recoil"
+            "native": "古見さんは、コミュ症です。2",
+            "romaji": "Komi-san wa, Komyushou desu. 2",
+            "english": "Komi Can't Communicate Part 2"
             }
         );
 

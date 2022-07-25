@@ -20,6 +20,7 @@ import ScraperService from './scraper/scraper.service';
 import { EnimeCacheInterceptor } from './cache/enime-cache.interceptor';
 import EpisodeController from './controller/episode.controller';
 import RecentController from './controller/recent.controller';
+import SearchController from './controller/search.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -29,7 +30,7 @@ import RecentController from './controller/recent.controller';
           store: redisStore,
           host: process.env.REDIS_HOST,
           port: Number(process.env.REDIS_PORT),
-          password: process.env.REDIS_PASSWORD
+          password: process.env.REDIS_PASSWORD,
       }),
       BullModule.forRoot({
         redis: {
@@ -48,7 +49,7 @@ import RecentController from './controller/recent.controller';
           }),
       })
   ],
-  controllers: [AppController, AnimeController, ProxyController, RecentController, EpisodeController],
+  controllers: [AppController, AnimeController, ProxyController, RecentController, SearchController, EpisodeController],
   providers: [AppService, DatabaseService, ProxyService, ScraperService,
       {
           provide: APP_GUARD,

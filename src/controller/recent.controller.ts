@@ -1,21 +1,24 @@
-import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
+import { CacheTTL, Controller, Get, Param, Query } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
 import { SkipThrottle } from '@nestjs/throttler';
-import { createPaginator } from 'prisma-pagination';
+import { createPaginator, PaginateFunction } from 'prisma-pagination';
+import Prisma from '@prisma/client';
 
 @SkipThrottle()
 @Controller("/recent")
 export default class RecentController {
-    episodePaginator = undefined;
+    episodePaginator: PaginateFunction = undefined;
 
     constructor(private readonly databaseService: DatabaseService) {
-        this.episodePaginator = createPaginator({ perPage: 50 })
+        this.episodePaginator = createPaginator({})
     }
 
-    @Get(":page")
+    @Get()
     @CacheTTL(300)
-    async recent(@Param("page") page: number) {
-        if (page <= 0) page = 1;
+    async recent(@Query("page") page: number, @Query("perPage") perPage: number) {
+        if (!page || page <= 0) page = 1;
+        if (!perPage || perPage <= 0) perPage = 20;
+        perPage = Math.min(100, perPage);
 
         const recent = await this.episodePaginator<Prisma.Episode, Prisma.EpisodeFindManyArgs>(this.databaseService.episode, {
             orderBy: {
@@ -30,11 +33,17 @@ export default class RecentController {
                     }
                 }
             },
-        }, { page: page })
+        }, { page: page, perPage: perPage })
 
-        return recent.data.map(episode => {
+        recent.data = recent.data.map(episode => {
+            // @ts-ignore
+            delete episode.anime["title_english"];
+            // @ts-ignore
+            delete episode.anime["title_romaji"];
+
             return {
                 ...episode,
+                // @ts-ignore
                 sources: episode.sources.map(source => {
                     return {
                         ...source,
@@ -43,5 +52,7 @@ export default class RecentController {
                 })
             }
         });
+
+        return recent;
     }
 }

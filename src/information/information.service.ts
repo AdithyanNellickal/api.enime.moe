@@ -6,6 +6,7 @@ import { AIRING_ANIME } from './anilist-queries';
 import DatabaseService from '../database/database.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import slugify from 'slugify';
 
 @Injectable()
 export default class InformationService {
@@ -39,8 +40,8 @@ export default class InformationService {
             season: this.seasons[currentSeason],
             page: currentPage,
             year: new Date().getFullYear(),
-            format: "TV",
-            minEpisodes: 1
+            status: "RELEASING",
+            format: "TV"
         };
 
         // No way I'm going to write types for these requests...
@@ -58,7 +59,6 @@ export default class InformationService {
                     current = false;
                     requestVariables.season = this.seasons[previousSeason];
                     requestVariables.year = this.seasons[currentSeason] === "SPRING" ? new Date().getFullYear() - 1 : new Date().getFullYear();
-                    requestVariables.minEpisodes = 16;
 
                     currentPage = 1;
                 }
@@ -66,6 +66,8 @@ export default class InformationService {
                 hasNextPagePast = animeList.Page.pageInfo.hasNextPage;
                 currentPage++;
             }
+
+            requestVariables.page = currentPage;
         }
 
         let animeIds = [];
@@ -87,25 +89,37 @@ export default class InformationService {
                 }
             });
 
+            const animeDbObject = {
+                title: anime.title,
+                anilistId: anime.id,
+                slug: slugify(anime.title.english || anime.title.romaji).toLowerCase(),
+                coverImage: anime.coverImage.extraLarge,
+                color: anime.coverImage.color,
+                bannerImage: anime.bannerImage,
+                description: anime.description,
+                duration: anime.duration,
+                averageScore: anime.averageScore,
+                status: anime.status,
+                season: anime.season,
+                next: nextEpisode,
+                genre: {
+                    connectOrCreate: anime.genres.map(genre => {
+                        return {
+                            where: { name: genre },
+                            create: { name: genre }
+                        }
+                    })
+                },
+                currentEpisode: currentEpisode,
+                synonyms: anime.synonyms,
+                title_english: anime.title.english,
+                title_romaji: anime.title.romaji
+            }
+
             if (!animeDb) { // Anime does not exist in our database, immediately push it to scrape
                 animeDb = await this.databaseService.anime.create({
                     data: {
-                        title: anime.title,
-                        anilistId: anime.id,
-                        coverImage: anime.coverImage.extraLarge,
-                        status: anime.status,
-                        season: anime.season,
-                        next: nextEpisode,
-                        genre: {
-                            connectOrCreate: anime.genres.map(genre => {
-                                return {
-                                    where: { name: genre },
-                                    create: { name: genre }
-                                }
-                            })
-                        },
-                        currentEpisode: currentEpisode,
-                        synonyms: anime.synonyms
+                        ...animeDbObject
                     }
                 });
                 animeIds.push(animeDb.id);
@@ -119,21 +133,7 @@ export default class InformationService {
                         anilistId: anime.id
                     },
                     data: {
-                        coverImage: anime.coverImage.extraLarge,
-                        title: anime.title,
-                        status: anime.status,
-                        season: anime.season,
-                        next: nextEpisode,
-                        genre: {
-                            connectOrCreate: anime.genres.map(genre => {
-                                return {
-                                    where: { name: genre },
-                                    create: { name: genre }
-                                }
-                            })
-                        },
-                        currentEpisode: currentEpisode,
-                        synonyms: anime.synonyms
+                        ...animeDbObject
                     }
                 })
             }

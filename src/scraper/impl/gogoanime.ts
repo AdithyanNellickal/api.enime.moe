@@ -4,6 +4,7 @@ import { AnimeWebPage, Episode, SourceType } from '../../types/global';
 import * as CryptoJS from 'crypto-js';
 import fetch from 'node-fetch';
 import * as similarity from 'string-similarity';
+import { transform } from '../../helper/romaji';
 
 // Credit to https://github.com/riimuru/gogoanime/blob/46edf3de166b7c5152919d6ac12ab6f55d9ed35b/lib/helpers/extractors/goload.js
 export default class GogoanimeScraper extends Scraper {
@@ -139,7 +140,7 @@ export default class GogoanimeScraper extends Scraper {
         let showElement = $(".last_episodes > ul > li").first();
 
         if (!showElement.length) {
-            if (special && t.english?.includes(":") || t.romaji?.includes(":")) {
+            if (special && (t.english?.includes(":") || t.romaji?.includes(":"))) {
                 let prefixEnglish = t.english?.split(":")[0];
                 let prefixRomaji = t.romaji?.split(":")[0];
 
@@ -164,6 +165,12 @@ export default class GogoanimeScraper extends Scraper {
             }
 
             if (t.current === t.romaji) {
+                t.current = transform(t.romaji);
+
+                return this.match(t);
+            }
+
+            if (t.current === transform(t.romaji)) {
                 t.special = true;
 
                 return this.match(t);
@@ -179,9 +186,9 @@ export default class GogoanimeScraper extends Scraper {
 
         let cleanedTitle = this.clean(title)
 
-        if (t.english && similarity.compareTwoStrings(t.english, cleanedTitle) >= 0.6) pass = true;
-        if (t.romaji && similarity.compareTwoStrings(t.romaji, cleanedTitle) >= 0.6) pass = true;
-        if (!original && t.current && similarity.compareTwoStrings(t.current, cleanedTitle) >= 0.6) pass = true;
+        if (t.english && similarity.compareTwoStrings(t.english.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
+        if (t.romaji && similarity.compareTwoStrings(t.romaji.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
+        if (!original && t.current && similarity.compareTwoStrings(t.current.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
 
         if (!pass) return undefined;
 
