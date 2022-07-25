@@ -1,6 +1,7 @@
 import { CacheTTL, Controller, Get, NotFoundException, Param, UseInterceptors } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
 import { SkipThrottle } from '@nestjs/throttler';
+import cuid from 'cuid';
 
 @SkipThrottle()
 @Controller("/anime")
@@ -58,9 +59,16 @@ export default class AnimeController {
     @Get(":id")
     @CacheTTL(300)
     async get(@Param("id") id) {
-        const anime = await this.databaseService.anime.findUnique({
+        const anime = await this.databaseService.anime.findFirst({
             where: {
-                id: id
+                OR: [
+                    {
+                        id: id
+                    },
+                    {
+                        slug: id
+                    }
+                ]
             },
             include: {
                 genre: {

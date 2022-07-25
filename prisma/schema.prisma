@@ -70,6 +70,7 @@ model Episode {
     anime       Anime      @relation(fields: [animeId], references: [id], onDelete: Cascade)
     number      Int
     title       String?
+    image       String?
     sources     Source[]
     createdAt   DateTime   @default(now())
     updatedAt   DateTime   @updatedAt
