@@ -2,6 +2,7 @@ import { CacheTTL, Controller, Get, NotFoundException, Param, UseInterceptors } 
 import DatabaseService from '../database/database.service';
 import { SkipThrottle } from '@nestjs/throttler';
 import cuid from 'cuid';
+import { clearAnimeField } from '../helper/model';
 
 @SkipThrottle()
 @Controller("/anime")
@@ -93,8 +94,7 @@ export default class AnimeController {
 
         if (!anime) throw new NotFoundException(`The anime with ID ${id} does not exist`);
 
-        delete anime["title_english"];
-        delete anime["title_romaji"];
+        clearAnimeField(anime);
 
         return {
             ...anime,

@@ -1,6 +1,7 @@
 import { SkipThrottle } from '@nestjs/throttler';
 import { CacheTTL, Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
+import { clearAnimeField } from '../helper/model';
 
 @SkipThrottle()
 @Controller("/episode")
@@ -19,6 +20,7 @@ export default class EpisodeController {
                 id: true,
                 number: true,
                 title: true,
+                anime: true,
                 sources: {
                     select: {
                         id: true
@@ -31,6 +33,7 @@ export default class EpisodeController {
 
         return {
             ...episode,
+            anime: clearAnimeField(episode.anime),
             sources: episode.sources.map(source => {
                 return {
                     ...source,

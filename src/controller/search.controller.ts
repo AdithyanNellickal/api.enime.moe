@@ -4,6 +4,7 @@ import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { createPaginator } from 'prisma-pagination';
 import { PaginateFunction } from 'prisma-pagination/src';
 import Prisma from '@prisma/client';
+import { clearAnimeField } from '../helper/model';
 
 @Controller("/search")
 export default class SearchController {
@@ -52,8 +53,7 @@ export default class SearchController {
         }, { page: page, perPage: perPage })
 
         results.data = results.data.map(anime => {
-            delete anime["title_english"];
-            delete anime["title_romaji"];
+            clearAnimeField(anime);
 
             return {
                 ...anime
