@@ -1,0 +1,5 @@
+# Enime API
+
+## Installation
+
+### Prerequisites

@@ -30,7 +30,7 @@ export default class ProxyController {
         const cacheKey = `proxy-source-${id}`;
 
         let cachedSource = await this.cacheManager.get(cacheKey);
-        if (cachedSource) return res.redirect(302, cachedSource);
+        if (cachedSource) return cachedSource;
 
         const source = await this.databaseService.source.findUnique({
             where: {
@@ -50,6 +50,6 @@ export default class ProxyController {
         const rawSourceUrl = await scraper.getRawSource(source.url);
         await this.cacheManager.set(cacheKey, rawSourceUrl, { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
 
-        return res.redirect(302, rawSourceUrl);
+        return rawSourceUrl;
     }
 }
