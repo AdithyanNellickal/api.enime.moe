@@ -100,8 +100,8 @@ export default class Zoro extends Scraper {
         let currentDuplicateNumber;
 
         for (let duplicate of duplicates) {
-            const number = duplicate;
-            if (currentDuplicateNumber && number > currentDuplicateNumber) episodes[episodes.indexOf(duplicate)].title = undefined;
+            const number = episodes[duplicate].number;
+            if (currentDuplicateNumber && number > currentDuplicateNumber) episodes[duplicate].title = undefined;
 
             currentDuplicateNumber = number;
         }

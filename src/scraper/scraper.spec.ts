@@ -24,8 +24,8 @@ describe("Scraper Test", function () {
         const scraper = new Zoro(application.get(ProxyService));
 
         const anime = await application.get(ScraperModule).matchAnime( {
-            "native": "遊☆戯☆王ゴーラッシュ!!",
-            "romaji": "Yu☆Gi☆Oh! Go Rush!!",
+            "native": "ケンダマスター拳",
+            "romaji": "Kenda Master Ken (TV)",
             "english": null
         }, scraper);
 

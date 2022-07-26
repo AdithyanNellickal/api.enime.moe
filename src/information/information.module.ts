@@ -126,6 +126,6 @@ export default class InformationModule implements OnModuleInit {
     }
 
     async onModuleInit() {
-        await this.checkForUpdatedEpisodes();
+        await this.refreshAnimeInfo();
     }
 }
