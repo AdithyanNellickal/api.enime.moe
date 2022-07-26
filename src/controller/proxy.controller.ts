@@ -24,6 +24,9 @@ export default class ProxyController {
     @Get("/source/:id")
     @Throttle(10, 60)
     @NoCache()
+    @Header("Cache-Control", "no-cache, no-store, must-revalidate")
+    @Header("Pragma", "no-cache")
+    @Header("Expires", "0")
     async sourceProxy(@Param() params, @Res() res) {
         const id = params.id.replace(/\.[^/.]+$/, "");
 
@@ -52,6 +55,6 @@ export default class ProxyController {
 
         await this.cacheManager.set(cacheKey, rawSourceUrl, { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
 
-        return res.redirect(302, cachedSource);
+        return res.redirect(302, rawSourceUrl);
     }
 }
