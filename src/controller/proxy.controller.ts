@@ -1,7 +1,7 @@
 import {
     CACHE_MANAGER, CacheInterceptor,
     Controller,
-    Get, Inject,
+    Get, Header, Inject,
     Injectable, InternalServerErrorException,
     NotFoundException,
     Param, Res, UseInterceptors

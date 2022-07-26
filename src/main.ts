@@ -20,7 +20,7 @@ export const bootstrap = async () => {
   await databaseService.enableShutdownHooks(app);
 
   app.enableCors();
-  await app.register(helmet);
+  // await app.register(helmet);
   await app.listen(port || 3000, "0.0.0.0");
 
   return app;
