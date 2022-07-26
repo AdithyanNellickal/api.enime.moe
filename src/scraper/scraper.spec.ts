@@ -18,34 +18,21 @@ describe("Scraper Test", function () {
     });
 
 
-    it("Gogoanime Scraper", async () => {
-        const scraper = new GogoanimeScraper(application.get(ProxyService));
+    it("Scraper", async () => {
+        //const scraper = new GogoanimeScraper(application.get(ProxyService));
+        const scraper = new Zoro(application.get(ProxyService));
 
-        const anime = await scraper.match({
-            "native": "古見さんは、コミュ症です。2",
-            "romaji": "Komi-san wa, Komyushou desu. 2",
-            "english": "Komi Can't Communicate Part 2"
-            }
-        );
+        /*
+        const anime = await application.get(ScraperModule).matchAnime({
+                "native": "古見さんは、コミュ症です。2",
+                "romaji": "Komi-san wa, Komyushou desu. 2",
+                "english": "Komi Can't Communicate Part 2"
+            }, scraper);
 
-        console.log(anime)
+         */
+
+        console.log(await scraper.fetch("/komi-san-wa-comyushou-desu-2nd-season-17975"))
         //await scraper.fetch(anime.path, 1);
     }).timeout(0);
 
-
-    /*
-    it("Zoro.to Scraper", async () => {
-        const scraper = new Zoro(application.get(ProxyService));
-
-        // TODO - Scraper logic and testing here
-        const anime = await scraper.match({
-            english: "Attack on Titan Season 2",
-            romaji: "Shingeki no Kyojin 2"
-        });
-
-        console.log(anime)
-        // await scraper.fetch(anime.path, 1);
-    });
-
-     */
 });

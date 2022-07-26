@@ -5,12 +5,12 @@ import { BullModule, Process, Processor } from '@nestjs/bull';
 import ScraperService from './scraper.service';
 import { Job } from 'bull';
 import InformationModule from '../information/information.module';
-import fetch from 'node-fetch';
 import cuid from 'cuid';
-import { SourceType } from '../types/global';
+import { AnimeWebPage, ScraperJobData, SourceType } from '../types/global';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import mime from 'mime-types';
+import Scraper from './scraper';
+import { transform } from '../helper/romaji';
 
 @Module({
     imports: [BullModule.registerQueue({
@@ -20,8 +20,6 @@ import mime from 'mime-types';
 })
 @Processor("enime")
 export default class ScraperModule implements OnModuleInit {
-    S3 = undefined;
-
     constructor(private readonly proxyService: ProxyService, private readonly databaseService: DatabaseService, private readonly scraperService: ScraperService) {
         if (!process.env.TESTING) dayjs.extend(utc);
     }
@@ -30,10 +28,60 @@ export default class ScraperModule implements OnModuleInit {
         if (process.env.TESTING) return;
     }
 
+    async matchAnime(title, scraper: Scraper): Promise<AnimeWebPage> {
+        let original = !title.current, special = title.special;
+        if (original) title.current = title.english;
+
+        let matchedEntry = await scraper.match(title);
+
+        if (!matchedEntry) {
+            if (special && (title.english?.includes(":") || title.romaji?.includes(":"))) {
+                let prefixEnglish = title.english?.split(":")[0];
+                let prefixRomaji = title.romaji?.split(":")[0];
+
+                if (title.current === prefixEnglish) {
+                    title.current = prefixRomaji;
+                } else if (title.current === prefixRomaji) {
+                    return undefined;
+                } else {
+                    title.current = prefixEnglish;
+                }
+
+                title.original = false;
+
+                return this.matchAnime(title, scraper);
+            }
+
+            if (title.current === title.english && title.romaji) {
+                title.current = title.romaji;
+                title.original = false;
+
+                return this.matchAnime(title, scraper);
+            }
+
+            if (title.current === title.romaji && title.current !== transform(title.romaji)) {
+                title.current = transform(title.romaji);
+
+                return this.matchAnime(title, scraper);
+            }
+
+            if (title.current === transform(title.romaji)) {
+                title.special = true;
+
+                return this.matchAnime(title, scraper);
+            }
+
+            return undefined;
+        }
+
+        return matchedEntry;
+    }
+
     @Process("scrape-anime-match")
-    async scrape(job: Job<string>) {
-        const id = job.data;
-        Logger.debug(`Received a job to fetch anime with ID ${job.data}`);
+    async scrape(job: Job<ScraperJobData>) {
+        const { animeId: id, infoOnly } = job.data;
+
+        Logger.debug(`Received a job to fetch anime with ID ${id}, info only mode: ${infoOnly}`);
 
         const anime = await this.databaseService.anime.findUnique({
             where: {
@@ -48,11 +96,12 @@ export default class ScraperModule implements OnModuleInit {
 
         try {
             for (let scraper of this.scraperService.scrapers) {
-                // @ts-ignore
-                let matchedAnimeEntry = scraper.match(anime.title);
-                if (matchedAnimeEntry instanceof Promise) matchedAnimeEntry = await matchedAnimeEntry;
+                if (infoOnly && !scraper.infoOnly) continue;
 
+                let matchedAnimeEntry = await this.matchAnime(anime.title, scraper);
                 if (!matchedAnimeEntry) continue;
+
+                let episodeToScrapeLower = Number.MAX_SAFE_INTEGER, episodeToScraperHigher = Number.MIN_SAFE_INTEGER;
 
                 for (let i = 1; i <= anime.currentEpisode; i++) {
                     const episodeWithSource = await this.databaseService.episode.findFirst({
@@ -75,89 +124,103 @@ export default class ScraperModule implements OnModuleInit {
                         continue;
                     }
 
-                    let scrapedEpisode = scraper.fetch(matchedAnimeEntry.path, i, i);
-                    if (scrapedEpisode instanceof Promise) scrapedEpisode = await scrapedEpisode;
+                    episodeToScrapeLower = Math.min(episodeToScrapeLower, i);
+                    episodeToScraperHigher = Math.max(episodeToScraperHigher, i);
+                }
 
-                    if (!scrapedEpisode) continue;
+                try {
+                    let scrapedEpisodes = scraper.fetch(matchedAnimeEntry.path, episodeToScrapeLower, episodeToScraperHigher);
 
-                    // TODO - We can optimize this by utilizing episode range fetch for websites like Gogoanime
-                    if (Array.isArray(scrapedEpisode)) scrapedEpisode = scrapedEpisode[0];
-                    if (!scrapedEpisode) continue;
+                    if (scrapedEpisodes instanceof Promise) scrapedEpisodes = await scrapedEpisodes;
+                    if (!scrapedEpisodes) continue;
 
-                    let episodeDb = await this.databaseService.episode.findFirst({
-                        where: {
-                            AND: [
-                                {
-                                    animeId: anime.id
-                                },
-                                {
-                                    number: i
-                                }
-                            ]
-                        }
-                    });
+                    if (!Array.isArray(scrapedEpisodes)) scrapedEpisodes = [scrapedEpisodes];
 
-                    if (!episodeDb) {
-                        episodeDb = await this.databaseService.episode.create({
-                            data: {
-                                anime: {
-                                    connect: { id: anime.id }
-                                },
-                                number: i,
-                                title: scrapedEpisode.title
+                    for (let scrapedEpisode of scrapedEpisodes) {
+                        let episodeDb = await this.databaseService.episode.findFirst({
+                            where: {
+                                AND: [
+                                    {
+                                        animeId: anime.id
+                                    },
+                                    {
+                                        number: scrapedEpisode.number
+                                    }
+                                ]
                             }
-                        })
-                    } else {
-                        if (scrapedEpisode.title) {
-                            episodeDb = await this.databaseService.episode.update({
-                                where: {
-                                    id: episodeDb.id
-                                },
+                        });
+
+                        if (!episodeDb) {
+                            episodeDb = await this.databaseService.episode.create({
                                 data: {
+                                    anime: {
+                                        connect: { id: anime.id }
+                                    },
+                                    number: scrapedEpisode.number,
                                     title: scrapedEpisode.title
                                 }
-                            });
-                        }
-                    }
+                            })
+                        } else {
+                            if (scrapedEpisode.title) {
+                                episodeDb = await this.databaseService.episode.update({
+                                    where: {
+                                        id: episodeDb.id
+                                    },
+                                    data: {
+                                        title: scrapedEpisode.title
+                                    }
+                                });
 
-                    let url = scrapedEpisode.url;
-                    let scrapedEpisodeId = cuid();
-
-                    let scrapedEpisodeDb = await this.databaseService.source.findUnique({
-                        where: {
-                            url: url
-                        }
-                    });
-
-                    if (!scrapedEpisodeDb) { // Normally we should not check here but just in case
-                        scrapedEpisodeDb = await this.databaseService.source.create({
-                            data: {
-                                id: scrapedEpisodeId,
-                                website: {
-                                    connect: { id: scraper.websiteMeta.id }
-                                },
-                                episode: {
-                                    connect: { id: episodeDb.id }
-                                },
-                                // @ts-ignore
-                                type: scrapedEpisode.type === SourceType.DIRECT ? "DIRECT" : "PROXY",
-                                url: url,
-                                resolution: scrapedEpisode.resolution,
-                                format: scrapedEpisode.format,
-                                referer: scrapedEpisode.referer?.trim()
+                                Logger.debug(`Updated an anime with episode title ${episodeDb.title} #${scrapedEpisode.number} under ID ${anime.id}`);
                             }
-                        })
-                    }
 
-                    Logger.debug(`Updated an anime with episode number ${episodeDb.number} under anime ${anime.id}`);
-                    await this.databaseService.anime.update({
-                        where: {
-                            id: anime.id
-                        },
-                        data: {
-                            lastEpisodeUpdate: dayjs().toISOString()
+                            Logger.debug(`No title for anime with ID ${anime.id} to update`);
                         }
-                    })
+
+                        if (!infoOnly && !scraper.infoOnly) {
+                            let url = scrapedEpisode.url;
+                            let scrapedEpisodeId = cuid();
+
+                            let scrapedEpisodeDb = await this.databaseService.source.findUnique({
+                                where: {
+                                    url: url
+                                }
+                            });
+
+                            if (!scrapedEpisodeDb) { // Normally we should not check here but just in case
+                                scrapedEpisodeDb = await this.databaseService.source.create({
+                                    data: {
+                                        id: scrapedEpisodeId,
+                                        website: {
+                                            connect: { id: scraper.websiteMeta.id }
+                                        },
+                                        episode: {
+                                            connect: { id: episodeDb.id }
+                                        },
+                                        // @ts-ignore
+                                        type: scrapedEpisode.type === SourceType.DIRECT ? "DIRECT" : "PROXY",
+                                        url: url,
+                                        resolution: scrapedEpisode.resolution,
+                                        format: scrapedEpisode.format,
+                                        referer: scrapedEpisode.referer?.trim()
+                                    }
+                                })
+                            }
+
+                            Logger.debug(`Updated an anime with episode number ${episodeDb.number} under ID ${anime.id}`);
+                            await this.databaseService.anime.update({
+                                where: {
+                                    id: anime.id
+                                },
+                                data: {
+                                    lastEpisodeUpdate: dayjs().toISOString()
+                                }
+                            })
+                        }
+                    }
+                } catch (e) {
+                    Logger.error(`Error with anime ID ${anime.id} with scraper on url ${scraper.url()}, skipping this job`, e);
+                    continue;
                 }
             }
         } catch (e) {

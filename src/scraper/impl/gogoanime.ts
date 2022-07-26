@@ -9,6 +9,7 @@ import { transform } from '../../helper/romaji';
 // Credit to https://github.com/riimuru/gogoanime/blob/46edf3de166b7c5152919d6ac12ab6f55d9ed35b/lib/helpers/extractors/goload.js
 export default class GogoanimeScraper extends Scraper {
     override enabled = true;
+    override infoOnly = false;
 
     ENCRYPTION_KEYS_URL =
         "https://raw.githubusercontent.com/justfoolingaround/animdl-provider-benchmarks/master/api/gogoanime.json";
@@ -77,7 +78,10 @@ export default class GogoanimeScraper extends Scraper {
 
         if (!source) return undefined;
 
-        return source.file;
+        return {
+            video: source.file,
+            subtitle: undefined
+        };
     }
 
     async fetch(path: string, startNumber: number, endNumber: number): Promise<Episode[]> {
@@ -127,10 +131,6 @@ export default class GogoanimeScraper extends Scraper {
     }
 
     async match(t): Promise<AnimeWebPage> {
-        let original = !t.current, special = t.special;
-
-        if (original) t.current = t.english;
-
         let url = `${this.url()}/search.html?keyword=${encodeURIComponent(t.current)}`;
 
         // Credit to https://github.com/AniAPI-Team/AniAPI/blob/main/ScraperEngine/resources/gogoanime.py
@@ -139,43 +139,7 @@ export default class GogoanimeScraper extends Scraper {
 
         let showElement = $(".last_episodes > ul > li").first();
 
-        if (!showElement.length) {
-            if (special && (t.english?.includes(":") || t.romaji?.includes(":"))) {
-                let prefixEnglish = t.english?.split(":")[0];
-                let prefixRomaji = t.romaji?.split(":")[0];
-
-                if (t.current === prefixEnglish) {
-                    t.current = prefixRomaji;
-                } else if (t.current === prefixRomaji) {
-                    return undefined;
-                } else {
-                    t.current = prefixEnglish;
-                }
-
-                t.original = false;
-
-                return this.match(t);
-            }
-
-            if (t.current === t.english && t.romaji) {
-                t.current = t.romaji;
-                t.original = false;
-
-                return this.match(t);
-            }
-
-            if (t.current === t.romaji) {
-                t.current = transform(t.romaji);
-
-                return this.match(t);
-            }
-
-            if (t.current === transform(t.romaji)) {
-                t.special = true;
-
-                return this.match(t);
-            }
-        }
+        if (!showElement.length) return undefined;
 
         let link = $(showElement).find(".name > a");
         let title = link.attr("title"), path = link.attr("href");
@@ -188,7 +152,7 @@ export default class GogoanimeScraper extends Scraper {
 
         if (t.english && similarity.compareTwoStrings(t.english.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
         if (t.romaji && similarity.compareTwoStrings(t.romaji.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
-        if (!original && t.current && similarity.compareTwoStrings(t.current.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
+        if (!t.original && t.current && similarity.compareTwoStrings(t.current.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
 
         if (!pass) return undefined;
 

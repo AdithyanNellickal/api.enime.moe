@@ -23,7 +23,7 @@ export default class RecentController {
 
         const recent = await this.episodePaginator<Prisma.Episode, Prisma.EpisodeFindManyArgs>(this.databaseService.episode, {
             orderBy: {
-                updatedAt: "desc"
+                createdAt: "desc"
             },
             include: {
                 anime: true,

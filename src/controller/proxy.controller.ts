@@ -13,6 +13,7 @@ import ScraperService from '../scraper/scraper.service';
 import { NoCache } from '../cache/no-cache.decorator';
 import { Cache } from 'cache-manager';
 import { EnimeCacheInterceptor } from '../cache/enime-cache.interceptor';
+import { RawSource } from '../types/global';
 
 @Controller("/proxy")
 @Injectable()
@@ -21,19 +22,31 @@ export default class ProxyController {
     constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private readonly databaseService: DatabaseService, private readonly scraperService: ScraperService) {
     }
 
+    @Get("/source/:id/subtitle")
+    @Throttle(10, 60)
+    @NoCache()
+    async sourceSubtitleProxy(@Param() params, @Res() res) {
+        const id = params.id.replace(/\.[^/.]+$/, "");
+        const rawSource = await this.getRawSource(id);
+
+        return res.redirect(302, rawSource.subtitle);
+    }
+
     @Get("/source/:id")
     @Throttle(10, 60)
     @NoCache()
-    @Header("Cache-Control", "no-cache, no-store, must-revalidate")
-    @Header("Pragma", "no-cache")
-    @Header("Expires", "0")
     async sourceProxy(@Param() params, @Res() res) {
         const id = params.id.replace(/\.[^/.]+$/, "");
+        const rawSource = await this.getRawSource(id);
 
+        return res.redirect(302, rawSource.video);
+    }
+
+    async getRawSource(id): Promise<RawSource> {
         const cacheKey = `proxy-source-${id}`;
 
         let cachedSource = await this.cacheManager.get(cacheKey);
-        if (cachedSource) return res.redirect(302, cachedSource as string);
+        if (cachedSource) return JSON.parse(<string>cachedSource);
 
         const source = await this.databaseService.source.findUnique({
             where: {
@@ -44,17 +57,19 @@ export default class ProxyController {
         if (!source) throw new NotFoundException("The source does not exist.");
 
         if (source.type === "DIRECT") { // No need to proxy the request, redirect to raw source directly
-            return res.redirect(302, source.url);
+            return {
+                video: source.url
+            };
         }
 
         const scraper = this.scraperService.scrapers.find(s => s.websiteMeta.id === source.websiteId);
         if (!scraper) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
 
-        const rawSourceUrl = await scraper.getRawSource(source.url);
-        if (!rawSourceUrl) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
+        const rawSource = await scraper.getRawSource(source.url);
+        if (!rawSource) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
 
-        await this.cacheManager.set(cacheKey, rawSourceUrl, { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
+        await this.cacheManager.set(cacheKey, JSON.stringify(rawSource), { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
 
-        return res.redirect(302, rawSourceUrl);
+        return rawSource;
     }
 }

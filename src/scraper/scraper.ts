@@ -1,9 +1,10 @@
 import ProxyService from '../proxy/proxy.service';
 import fetch from 'node-fetch';
-import { Episode, AnimeWebPage, WebsiteMeta } from '../types/global';
+import { Episode, AnimeWebPage, WebsiteMeta, RawSource } from '../types/global';
 
 export default abstract class Scraper {
-    protected enabled = false;
+    public infoOnly = false;
+    public enabled = false;
 
     public websiteMeta: WebsiteMeta = undefined;
 
@@ -21,7 +22,7 @@ export default abstract class Scraper {
 
     abstract fetch(path: string, number: number, endNumber: number | undefined): Episode | Promise<Episode> | Promise<Episode[]> | Episode[];
 
-    async getRawSource(sourceUrl: string | URL, referer = undefined): Promise<string> {
+    async getRawSource(sourceUrl: string | URL, referer = undefined): Promise<RawSource> {
         return undefined;
     }
 

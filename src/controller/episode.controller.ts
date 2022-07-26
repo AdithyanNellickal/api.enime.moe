@@ -20,7 +20,13 @@ export default class EpisodeController {
                 id: true,
                 number: true,
                 title: true,
-                anime: true,
+                anime: {
+                    select: {
+                        id: true,
+                        title: true,
+                        episodes: true
+                    }
+                },
                 sources: {
                     select: {
                         id: true

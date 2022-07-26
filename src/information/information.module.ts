@@ -18,14 +18,18 @@ import ProxyService from '../proxy/proxy.service';
     })],
     providers: [DatabaseService, InformationService, ScraperService, ProxyService]
 })
-export default class InformationModule {
+export default class InformationModule implements OnModuleInit {
     private informationWorker;
 
     constructor(@InjectQueue("enime") private readonly queue: Queue, private readonly databaseService: DatabaseService) {
         if (!process.env.TESTING) dayjs.extend(utc);
     }
 
-    @Cron(CronExpression.EVERY_MINUTE)
+    async onModuleInit() {
+        await this.refreshAnimeInfo();
+    }
+
+    // @Cron(CronExpression.EVERY_MINUTE)
     async updateAnime() {
         Logger.debug("Now we start refetching currently releasing anime from Anilist");
         performance.mark("information-fetch-start");
@@ -37,7 +41,10 @@ export default class InformationModule {
                 Logger.debug(`Refetching completed, took ${performance.measure("information-fetch", "information-fetch-start", "information-fetch-end").duration.toFixed(2)}ms, tracked ${animeIds.length} anime entries.`);
 
                 for (let animeId of animeIds) { // Higher priority than the daily anime sync
-                    await this.queue.add("scrape-anime-match", animeId, {
+                    await this.queue.add("scrape-anime-match", {
+                        animeId: animeId,
+                        infoOnly: false
+                    }, {
                         priority: 4,
                         removeOnComplete: true
                     });
@@ -49,7 +56,7 @@ export default class InformationModule {
     }
 
     // Every 10 minutes, we check anime that have don't have "enough episode" stored in the database (mostly the anime source sites update slower than Anilist because subs stuff) so we sync that part more frequently
-    @Cron(CronExpression.EVERY_10_MINUTES)
+    // @Cron(CronExpression.EVERY_10_MINUTES)
     async checkForUpdatedEpisodes() {
         const animeList = await this.databaseService.anime.findMany({
             where: {
@@ -67,11 +74,38 @@ export default class InformationModule {
         });
 
         for (let anime of animeList) { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated"
-            if (anime.currentEpisode !== anime.episodes.filter(episode => episode.sources.length > 0).length) await this.queue.add("scrape-anime-match", anime.id, {
+            if (anime.currentEpisode !== anime.episodes.filter(episode => episode.sources.length > 0).length) await this.queue.add("scrape-anime-match", {
+                animeId: anime.id,
+                infoOnly: false
+            }, {
                 priority: 3,
                 removeOnComplete: true
             });
         }
+    }
+
+    // @Cron(CronExpression.EVERY_HOUR)
+    async refreshAnimeInfo() {
+        const animeList = await this.databaseService.anime.findMany({
+            where: {
+                episodes: {
+                    some: {
+                        title: null
+                    }
+                }
+            }
+        });
+
+        for (let anime of animeList) { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated"
+            await this.queue.add("scrape-anime-match", {
+                animeId: anime.id,
+                infoOnly: true
+            }, {
+                priority: 6,
+                removeOnComplete: true
+            });
+        }
+
     }
 
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -88,7 +122,10 @@ export default class InformationModule {
         });
 
         for (let anime of eligibleToScrape) {
-            await this.queue.add("scrape-anime-match", anime.id, {
+            await this.queue.add("scrape-anime-match", {
+                animeId: anime.id,
+                infoOnly: false
+            }, {
                 priority: 5,
                 removeOnComplete: true
             });
