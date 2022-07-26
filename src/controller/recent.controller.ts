@@ -25,6 +25,11 @@ export default class RecentController {
             orderBy: {
                 createdAt: "desc"
             },
+            where: {
+              sources: {
+                  some: {}
+              }
+            },
             include: {
                 anime: true,
                 sources: {

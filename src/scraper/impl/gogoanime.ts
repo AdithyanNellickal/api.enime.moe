@@ -57,19 +57,20 @@ export default class GogoanimeScraper extends Scraper {
     override async getRawSource(sourceUrl, referer) {
         const url = sourceUrl instanceof URL ? sourceUrl : new URL(sourceUrl);
 
-        const response = this.get(url.href, {
+        let response = await this.get(url.href, {
             Referer: referer
-        }, true);
+        }, false);
 
         const params = await this.generateEncryptAjaxParameters(
-            await (await response).text(),
+            await response.text(),
             url.searchParams.get("id")
         );
 
         const fetchRes = await this.get(`${url.protocol}//${url.hostname}/encrypt-ajax.php?${params}`, {
                 "X-Requested-With": "XMLHttpRequest",
+
             },
-            true
+            false
         );
 
         const res = this.decryptEncryptAjaxResponse(await fetchRes.json());
