@@ -35,6 +35,9 @@ export default async function (job: Job<ScraperJobData>, cb: DoneCallback) {
             for (let scraper of await scraperService.scrapers()) {
                 if (infoOnly && !scraper.infoOnly) continue;
 
+                const title = anime.title;
+                title["synonyms"] = anime.synonyms;
+
                 let matchedAnimeEntry = await scraperModule.matchAnime(anime.title, scraper);
 
                 if (!matchedAnimeEntry) continue;

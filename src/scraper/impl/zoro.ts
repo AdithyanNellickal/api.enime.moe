@@ -143,7 +143,7 @@ export default class Zoro extends Scraper {
         // If it's above 90% similar, then the entry is probably a success
         let highestRating = Number.MIN_VALUE, highestEntry = undefined, highestEntryUsedTitle = undefined;
 
-        for (let alt of [t.english, t.romaji, t.native]) {
+        for (let alt of [t.english, t.romaji, t.native, ...t.synonyms]) {
             if (!alt) continue;
 
             let bestResult = similarity.findBestMatch(alt, results.map(r => clean(r.title)));
