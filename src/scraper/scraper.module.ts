@@ -33,7 +33,7 @@ export default class ScraperModule implements OnModuleInit {
         if (!("original" in title)) title.original = true;
 
         let original = title.original, special = title.special;
-        if (original) title.current = title.english;
+        if (original) title.current = title.english || title.romaji;
 
         let matchedEntry = await scraper.match(title);
 

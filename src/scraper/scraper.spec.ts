@@ -24,13 +24,9 @@ describe("Scraper Test", function () {
         const scraper = new Zoro(application.get(ProxyService));
 
         const anime = await application.get(ScraperModule).matchAnime( {
-            "native": "阿波連さんははかれない",
-            "romaji": "Aharen-san wa Hakarenai",
-            "english": "Aharen-san wa Hakarenai",
-            synonyms: [
-                "Aharen Is Indecipherable",
-                "Aharen Is Unfathomable"
-            ]
+            "native": "遊☆戯☆王ゴーラッシュ!!",
+            "romaji": "Yu☆Gi☆Oh! Go Rush!!",
+            "english": null
         }, scraper);
 
         console.log(await scraper.fetch(anime.path));

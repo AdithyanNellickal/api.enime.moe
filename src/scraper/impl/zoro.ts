@@ -2,7 +2,7 @@ import Scraper from '../scraper';
 import * as cheerio from 'cheerio';
 import * as similarity from 'string-similarity';
 import { Episode } from '../../types/global';
-import { clean } from '../../helper/title';
+import { clean, removeSpecialChars } from '../../helper/title';
 import fetch from 'node-fetch';
 
 export default class Zoro extends Scraper {
@@ -143,7 +143,7 @@ export default class Zoro extends Scraper {
         // If it's above 90% similar, then the entry is probably a success
         let highestRating = Number.MIN_VALUE, highestEntry = undefined, highestEntryUsedTitle = undefined;
 
-        for (let alt of [t.english, t.romaji, t.native, ...t.synonyms]) {
+        for (let alt of [t.english, t.romaji, t.native, ...(t.synonyms || [])]) {
             if (!alt) continue;
 
             let bestResult = similarity.findBestMatch(alt, results.map(r => clean(r.title)));
@@ -159,7 +159,16 @@ export default class Zoro extends Scraper {
 
         if (!highestEntry) return undefined;
 
-        if (similarity.compareTwoStrings(highestEntryUsedTitle, clean(highestEntry.title)) < 0.9) return undefined;
+        let pass = false;
+
+        if (similarity.compareTwoStrings(removeSpecialChars(highestEntryUsedTitle), highestEntry.title) >= 0.75) pass = true;
+        if (similarity.compareTwoStrings(highestEntryUsedTitle, removeSpecialChars(highestEntry.title)) >= 0.75) pass = true;
+        if (similarity.compareTwoStrings(removeSpecialChars(highestEntryUsedTitle), removeSpecialChars(highestEntry.title)) >= 0.75) pass = true;
+        if (similarity.compareTwoStrings(clean(highestEntryUsedTitle), highestEntry.title) >= 0.75) pass = true;
+        if (similarity.compareTwoStrings(highestEntryUsedTitle, clean(highestEntry.title)) >= 0.75) pass = true;
+        if (similarity.compareTwoStrings(clean(highestEntryUsedTitle), clean(highestEntry.title)) >= 0.75) pass = true;
+
+        if (!pass) return undefined;
 
         return highestEntry;
     }
