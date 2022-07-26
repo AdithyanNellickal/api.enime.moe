@@ -62,7 +62,7 @@ export default class ProxyController {
             };
         }
 
-        const scraper = this.scraperService.scrapers.find(s => s.websiteMeta.id === source.websiteId);
+        const scraper = (await this.scraperService.scrapers()).find(s => s.websiteMeta.id === source.websiteId);
         if (!scraper) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
 
         let rawSource = undefined;
