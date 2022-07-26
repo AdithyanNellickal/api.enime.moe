@@ -1,4 +1,4 @@
-import Scraper from '../scraper';
+import Scraper, { USER_AGENT } from '../scraper';
 import * as cheerio from 'cheerio';
 import { AnimeWebPage, Episode, SourceType } from '../../types/global';
 import * as CryptoJS from 'crypto-js';
@@ -88,13 +88,13 @@ export default class GogoanimeScraper extends Scraper {
     async fetch(path: string, startNumber: number, endNumber: number): Promise<Episode[]> {
         let url = `${this.url()}${path}`;
 
-        let response = this.get(url, {}, true);
+        let response = this.get(url, {}, false);
         let $ = cheerio.load(await (await response).text());
 
         const movieId = $("#movie_id").attr("value");
 
         url = `https://ajax.gogo-load.com/ajax/load-list-episode?ep_start=${startNumber}&ep_end=${endNumber}&id=${movieId}`;
-        response = this.get(url, {}, true);
+        response = this.get(url, {}, false);
         $ = cheerio.load(await (await response).text());
 
         const episodesSource = [];
@@ -111,7 +111,7 @@ export default class GogoanimeScraper extends Scraper {
         for (let episode of episodesSource) {
             if (!episode.url) continue;
 
-            let embedResponse = this.get(episode.url, {}, true);
+            let embedResponse = this.get(episode.url, {}, false);
             let $$ = cheerio.load(await (await embedResponse).text());
 
             let embedUrl = $$("iframe").first().attr("src");
@@ -135,7 +135,7 @@ export default class GogoanimeScraper extends Scraper {
         let url = `${this.url()}/search.html?keyword=${encodeURIComponent(t.current)}`;
 
         // Credit to https://github.com/AniAPI-Team/AniAPI/blob/main/ScraperEngine/resources/gogoanime.py
-        let response = this.get(url, {}, true);
+        let response = this.get(url, {}, false);
         let $ = cheerio.load(await (await response).text());
 
         let showElement = $(".last_episodes > ul > li").first();
@@ -150,6 +150,9 @@ export default class GogoanimeScraper extends Scraper {
         if (!title) return undefined;
 
         let cleanedTitle = this.clean(title)
+
+        if (t.english && t.english.toLowerCase() === title.toLowerCase()) pass = true;
+        if (t.romaji && t.romaji.toLowerCase() === title.toLowerCase()) pass = true;
 
         if (t.english && similarity.compareTwoStrings(t.english.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
         if (t.romaji && similarity.compareTwoStrings(t.romaji.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;

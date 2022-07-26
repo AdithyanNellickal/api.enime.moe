@@ -157,6 +157,8 @@ export default class Zoro extends Scraper {
             }
         }
 
+        if (!highestEntry) return undefined;
+
         if (similarity.compareTwoStrings(highestEntryUsedTitle, clean(highestEntry.title)) < 0.9) return undefined;
 
         return highestEntry;

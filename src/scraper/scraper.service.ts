@@ -6,14 +6,16 @@ import ProxyService from '../proxy/proxy.service';
 import DatabaseService from '../database/database.service';
 
 @Injectable()
-export default class ScraperService implements OnModuleInit {
+export default class ScraperService {
     private importedScrapers: Scraper[] = [];
 
     constructor(private readonly proxyService: ProxyService, private readonly databaseService: DatabaseService) {
 
     }
 
-    async onModuleInit() {
+    public async scrapers() {
+        if (this.importedScrapers.length) return this.importedScrapers;
+
         const files = (await fs.readdir(path.resolve(__dirname, "./impl"))).filter(file => {
             return path.extname(file).toLowerCase() === ".js" || path.extname(file).toLowerCase() === ".ts";
         });
@@ -42,9 +44,7 @@ export default class ScraperService implements OnModuleInit {
                 id: website.id
             }
         }
-    }
 
-    public get scrapers() {
         return this.importedScrapers;
     }
 }

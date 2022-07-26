@@ -14,7 +14,7 @@ export default class InformationService {
     private readonly anilistBaseEndpoint = "https://graphql.anilist.co";
     private readonly seasons = ["WINTER", "SPRING", "SUMMER", "FALL"];
 
-    constructor(private readonly databaseService: DatabaseService, @InjectQueue("enime") private readonly queue: Queue) {
+    constructor(private readonly databaseService: DatabaseService, @InjectQueue("scrape") private readonly queue: Queue) {
         this.client = new GraphQLClient(this.anilistBaseEndpoint, {
             headers: {
                 "Content-Type": "application/json",

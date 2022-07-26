@@ -21,11 +21,12 @@ import { EnimeCacheInterceptor } from './cache/enime-cache.interceptor';
 import EpisodeController from './controller/episode.controller';
 import RecentController from './controller/recent.controller';
 import SearchController from './controller/search.controller';
+import DatabaseModule from './database/database.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true
-  }), ScheduleModule.forRoot(), ScraperModule, InformationModule, HealthModule,
+  }), ScheduleModule.forRoot(), DatabaseModule, ScraperModule, InformationModule, HealthModule,
       CacheModule.register({
           store: redisStore,
           host: process.env.REDIS_HOST,
@@ -60,5 +61,6 @@ import SearchController from './controller/search.controller';
           useClass: EnimeCacheInterceptor,
       }
   ],
+    exports: [DatabaseService]
 })
 export class AppModule {}

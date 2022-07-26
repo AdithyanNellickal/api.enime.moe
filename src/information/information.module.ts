@@ -11,22 +11,19 @@ import { fork } from 'child_process';
 import InformationService from './information.service';
 import { Queue } from 'bull';
 import ProxyService from '../proxy/proxy.service';
+import DatabaseModule from '../database/database.module';
 
 @Module({
     imports: [BullModule.registerQueue({
-        name: "enime"
-    })],
-    providers: [DatabaseService, InformationService, ScraperService, ProxyService]
+        name: "scrape"
+    }), DatabaseModule],
+    providers: [InformationService, ScraperService, ProxyService]
 })
 export default class InformationModule implements OnModuleInit {
     private informationWorker;
 
-    constructor(@InjectQueue("enime") private readonly queue: Queue, private readonly databaseService: DatabaseService) {
+    constructor(@InjectQueue("scrape") private readonly queue: Queue, private readonly databaseService: DatabaseService) {
         if (!process.env.TESTING) dayjs.extend(utc);
-    }
-
-    async onModuleInit() {
-        await this.refreshAnimeInfo();
     }
 
     @Cron(CronExpression.EVERY_MINUTE)
@@ -40,15 +37,13 @@ export default class InformationModule implements OnModuleInit {
                 performance.mark("information-fetch-end");
                 Logger.debug(`Refetching completed, took ${performance.measure("information-fetch", "information-fetch-start", "information-fetch-end").duration.toFixed(2)}ms, tracked ${animeIds.length} anime entries.`);
 
-                for (let animeId of animeIds) { // Higher priority than the daily anime sync
-                    await this.queue.add("scrape-anime-match", {
-                        animeId: animeId,
-                        infoOnly: false
-                    }, {
-                        priority: 4,
-                        removeOnComplete: true
-                    });
-                }
+                await this.queue.add( { // Higher priority than the daily anime sync
+                    animeIds: animeIds,
+                    infoOnly: false
+                }, {
+                    priority: 4,
+                    removeOnComplete: true
+                });
             })
         }
 
@@ -64,7 +59,9 @@ export default class InformationModule implements OnModuleInit {
                     in: ["RELEASING", "FINISHED"]
                 }
             },
-            include: {
+            select: {
+                id: true,
+                currentEpisode: true,
                 episodes: {
                     include: {
                         sources: true
@@ -73,15 +70,13 @@ export default class InformationModule implements OnModuleInit {
             }
         });
 
-        for (let anime of animeList) { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated"
-            if (anime.currentEpisode !== anime.episodes.filter(episode => episode.sources.length > 0).length) await this.queue.add("scrape-anime-match", {
-                animeId: anime.id,
-                infoOnly: false
-            }, {
-                priority: 3,
-                removeOnComplete: true
-            });
-        }
+        await this.queue.add( { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated"
+            animeIds: animeList.filter(anime => anime.currentEpisode !== anime.episodes.filter(episode => episode.sources.length > 0).length).map(anime => anime.id),
+            infoOnly: false
+        }, {
+            priority: 6,
+            removeOnComplete: true
+        });
     }
 
     @Cron(CronExpression.EVERY_HOUR)
@@ -93,19 +88,19 @@ export default class InformationModule implements OnModuleInit {
                         title: null
                     }
                 }
+            },
+            select: {
+                id: true
             }
         });
 
-        for (let anime of animeList) { // Episode number are unique values, we can safely assume "if the current episode progress count is not even equal to the amount of episodes we have in database, the anime entry should be outdated"
-            await this.queue.add("scrape-anime-match", {
-                animeId: anime.id,
-                infoOnly: true
-            }, {
-                priority: 6,
-                removeOnComplete: true
-            });
-        }
-
+        await this.queue.add( {
+            animeIds: animeList.map(anime => anime.id),
+            infoOnly: true
+        }, {
+            priority: 6,
+            removeOnComplete: true
+        });
     }
 
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -121,14 +116,16 @@ export default class InformationModule implements OnModuleInit {
             }
         });
 
-        for (let anime of eligibleToScrape) {
-            await this.queue.add("scrape-anime-match", {
-                animeId: anime.id,
-                infoOnly: false
-            }, {
-                priority: 5,
-                removeOnComplete: true
-            });
-        }
+        await this.queue.add({
+            animeIds: eligibleToScrape.map(anime => anime.id),
+            infoOnly: false
+        }, {
+            priority: 5,
+            removeOnComplete: true
+        });
+    }
+
+    async onModuleInit() {
+        await this.checkForUpdatedEpisodes();
     }
 }

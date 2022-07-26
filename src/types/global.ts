@@ -4,7 +4,7 @@ export interface WebsiteMeta {
 }
 
 export interface ScraperJobData {
-    animeId: string;
+    animeIds: string[];
     infoOnly?: boolean;
 }
 
