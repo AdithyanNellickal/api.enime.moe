@@ -31,7 +31,7 @@ export default abstract class Scraper {
     async get(url, headers = {}, proxy = false) {
         let agent = undefined;
 
-        if (proxy) {
+        if (proxy && process.env.WEBSHARE_API_KEY?.length > 0) {
             agent = await this.proxyService.getProxyAgent();
         }
 

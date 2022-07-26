@@ -32,15 +32,6 @@ export default class ProxyService implements OnModuleInit {
             }
         });
 
-        // Might only happen at the startup, in this case we use predefined proxy as backup
-        if (!available) return {
-            address: process.env.BACKUP_PROXY_ADDRESS,
-            port_http: Number(process.env.BACKUP_PROXY_PORT_HTTP),
-            port_socks5: Number(process.env.BACKUP_PROXY_PORT_SOCKS5),
-            password: process.env.BACKUP_PROXY_PASSWORD,
-            username: process.env.BACKUP_PROXY_USERNAME
-        };
-
         await this.databaseService.proxy.update({
             where: {
                 id: available.id
@@ -55,6 +46,8 @@ export default class ProxyService implements OnModuleInit {
     }
 
     async load() {
+        if (!process.env.WEBSHARE_API_KEY?.length) return;
+
         this.loading = true;
 
         const proxyListResponse = (await (await fetch(this.listProxiesEndpoint, {
