@@ -76,6 +76,7 @@ export default async function (job: Job<ScraperJobData>, cb: DoneCallback) {
                     if (!scrapedEpisodes) continue;
 
                     if (!Array.isArray(scrapedEpisodes)) scrapedEpisodes = [scrapedEpisodes];
+                    if (scrapedEpisodes.length > anime.currentEpisode) continue; // STOP! This anime source site uses a different episode numbering strategy that it will potentially break the database. Don't bother use this anime's information from this site
 
                     for (let scrapedEpisode of scrapedEpisodes) {
                         let episodeDb = await databaseService.episode.findFirst({
