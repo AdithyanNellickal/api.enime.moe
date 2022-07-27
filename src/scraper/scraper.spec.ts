@@ -24,12 +24,12 @@ describe("Scraper Test", function () {
         const scraper = new Zoro(application.get(ProxyService));
 
         const anime = await application.get(ScraperModule).matchAnime( {
-            "native": "ケンダマスター拳",
-            "romaji": "Kenda Master Ken (TV)",
-            "english": null
+            "native": "まちカドまぞく 2丁目",
+            "romaji": "Machikado Mazoku: 2-Choume",
+            "english": "The Demon Girl Next Door Season 2"
         }, scraper);
 
-        console.log(await scraper.fetch(anime.path));
+        console.log(anime);
 
 
 

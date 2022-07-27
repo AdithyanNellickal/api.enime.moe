@@ -5,7 +5,7 @@ import { createPaginator } from 'prisma-pagination';
 import { PaginateFunction } from 'prisma-pagination/src';
 import Prisma from '@prisma/client';
 import { clearAnimeField } from '../helper/model';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import Search from '../entity/search.entity';
 
 @Controller("/search")
@@ -30,13 +30,13 @@ export default class SearchController {
         status: 429,
         description: "The API throttling has been reached, check response headers for more information"
     })
-    @ApiParam({
+    @ApiQuery({
         type: Number,
         name: "page",
         required: false,
         description: "The page number of search list, default to 1"
     })
-    @ApiParam({
+    @ApiQuery({
         type: Number,
         name: "perPage",
         required: false,

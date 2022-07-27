@@ -144,23 +144,32 @@ export default class Zoro extends Scraper {
         // If it's above 90% similar, then the entry is probably a success
         let highestRating = Number.MIN_VALUE, highestEntry = undefined, highestEntryUsedTitle = undefined;
 
+        let pass = false;
+        const firstResult = results[0]; // It's not exactly sort by relevance but first result is still a viable try, if we can get this right in one hit it can save a lot of time
         for (let alt of [t.english, t.romaji, t.native, ...(t.synonyms || [])]) {
             if (!alt) continue;
 
-            let bestResult = similarity.findBestMatch(alt, results.map(r => clean(r.title)));
-
-            let entry = results.find(r => clean(r.title) === bestResult.bestMatch.target);
-
-            if (bestResult.bestMatch.rating > highestRating) {
-                highestRating = bestResult.bestMatch.rating;
-                highestEntry = entry;
-                highestEntryUsedTitle = alt;
-            }
+            if (deepMatch(alt, firstResult.title)) return firstResult;
         }
 
-        if (!highestEntry) return undefined;
+        if (!pass) {
+            for (let alt of [t.english, t.romaji, t.native, ...(t.synonyms || [])]) {
+                if (!alt) continue;
 
-        let pass = deepMatch(highestEntryUsedTitle, highestEntry.title);
+                let bestResult = similarity.findBestMatch(alt, results.map(r => clean(r.title)));
+
+                let entry = results.find(r => clean(r.title) === bestResult.bestMatch.target);
+
+                if (bestResult.bestMatch.rating > highestRating) {
+                    highestRating = bestResult.bestMatch.rating;
+                    highestEntry = entry;
+                    highestEntryUsedTitle = alt;
+                }
+            }
+
+            if (highestEntry && deepMatch(highestEntryUsedTitle, highestEntry.title)) pass = true;
+        }
+
         if (!pass) return undefined;
 
         return highestEntry;

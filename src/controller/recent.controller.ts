@@ -4,7 +4,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { createPaginator, PaginateFunction } from 'prisma-pagination';
 import Prisma from '@prisma/client';
 import { clearAnimeField } from '../helper/model';
-import { ApiExcludeEndpoint, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import Recent from '../entity/recent.entity';
 
 @SkipThrottle()
@@ -20,13 +20,13 @@ export default class RecentController {
     @Get()
     @CacheTTL(300)
     @ApiOperation({ operationId: "Fetch recent episode releases", summary: "Get recent episode releases" })
-    @ApiParam({
+    @ApiQuery({
         type: Number,
         name: "page",
         required: false,
         description: "The page number of search list, default to 1"
     })
-    @ApiParam({
+    @ApiQuery({
         type: Number,
         name: "perPage",
         required: false,

@@ -1,5 +1,5 @@
 export function clean(title) {
-    return title.replaceAll(/[^A-Za-z0-9!@#$%^&*() ]/gmi, " ").replaceAll(/(th|rd|nd|st) (Season)/gmi, "").replaceAll(/\([^\(]*\)$/gmi, "").trimEnd();
+    return title.replaceAll(/[^A-Za-z0-9!@#$%^&*() ]/gmi, " ").replaceAll(/(th|rd|nd|st) (Season|season)/gmi, "").replaceAll(/\([^\(]*\)$/gmi, "").trimEnd();
 }
 
 export function removeSpecialChars(title) {
