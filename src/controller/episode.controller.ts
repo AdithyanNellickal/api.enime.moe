@@ -15,7 +15,7 @@ export default class EpisodeController {
 
     @Get(":id")
     @CacheTTL(300)
-    @ApiOperation({ summary: "Get an episode object with provided ID" })
+    @ApiOperation({ operationId: "Get episode", summary: "Get an episode object with provided ID" })
     @ApiResponse({
         status: 200,
         description: "The found episode object with the ID provided"
@@ -34,7 +34,12 @@ export default class EpisodeController {
                     select: {
                         id: true,
                         title: true,
-                        episodes: true
+                        episodes: true,
+                        genre: {
+                            select: {
+                                name: true
+                            }
+                        }
                     }
                 },
                 sources: {
@@ -50,7 +55,11 @@ export default class EpisodeController {
         return {
             ...episode,
             // @ts-ignore
-            anime: clearAnimeField(episode.anime),
+            anime: {
+                // @ts-ignore
+                ...clearAnimeField(episode.anime),
+                genre: episode.anime.genre.map(g => g.name)
+            },
             // @ts-ignore
             sources: episode.sources.map(source => {
                 return {

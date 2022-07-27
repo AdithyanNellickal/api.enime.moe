@@ -23,6 +23,7 @@ export const bootstrap = async () => {
         .setTitle("Enime API")
         .setDescription("An open source API service for developers to access anime info (as well as their video sources)")
         .setContact("Enime Team", "https://api.enime.moe", "team@enime.moe")
+        .setBasePath("https://api.enime.moe")
         .addTag("anime")
         .addTag("recent")
         .addTag("episode")

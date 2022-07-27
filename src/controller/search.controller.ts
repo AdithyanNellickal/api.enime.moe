@@ -20,7 +20,7 @@ export default class SearchController {
     @Get(":query")
     @CacheTTL(300)
     @Throttle(5, 60)
-    @ApiOperation({ summary: "Search anime based on query" })
+    @ApiOperation({ operationId: "Search Anime", summary: "Search anime based on query" })
     @ApiResponse({
         status: 200,
         description: "The list of anime matched from search query"
@@ -33,6 +33,13 @@ export default class SearchController {
         const results = await this.searchPaginator<Prisma.Anime, Prisma.AnimeFindManyArgs>(this.databaseService.anime, {
             orderBy: {
                 updatedAt: "desc"
+            },
+            include: {
+                genre: {
+                    select: {
+                        name: true
+                    }
+                }
             },
             where: {
                 OR: [
@@ -64,7 +71,9 @@ export default class SearchController {
             clearAnimeField(anime);
 
             return {
-                ...anime
+                ...anime,
+                // @ts-ignore
+                genre: anime.genre.map(g => g.name)
             }
         })
 

@@ -14,7 +14,7 @@ export default class AnimeController {
     }
 
     @Get()
-    @ApiOperation({ summary: "List all anime available in the service", deprecated: true })
+    @ApiOperation({ operationId: "List anime", summary: "List all anime available in the service", deprecated: true })
     @ApiResponse({
         status: 200,
         description: "All anime objects in the service"
@@ -67,7 +67,7 @@ export default class AnimeController {
     }
 
     @Get(":id")
-    @ApiOperation({ summary: "Get an anime object in the service with ID or slug" })
+    @ApiOperation({ operationId: "Get anime", summary: "Get an anime object in the service with ID or slug" })
     @ApiResponse({
         status: 200,
         description: "The found anime object with the ID or slug provided"

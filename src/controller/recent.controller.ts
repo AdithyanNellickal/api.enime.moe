@@ -19,7 +19,7 @@ export default class RecentController {
 
     @Get()
     @CacheTTL(300)
-    @ApiOperation({ summary: "Get recent episode releases" })
+    @ApiOperation({ operationId: "Fetch recent episode releases", summary: "Get recent episode releases" })
     @ApiResponse({
         status: 200,
         description: "The list of recent episode releases, paginated"
@@ -39,7 +39,15 @@ export default class RecentController {
               }
             },
             include: {
-                anime: true,
+                anime: {
+                    include: {
+                        genre: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                },
                 sources: {
                     select: {
                         id: true,
@@ -53,7 +61,12 @@ export default class RecentController {
             return {
                 ...episode,
                 // @ts-ignore
-                anime: clearAnimeField(episode.anime),
+                anime: {
+                    // @ts-ignore
+                    ...clearAnimeField(episode.anime),
+                    // @ts-ignore
+                    genre: episode.anime.genre.map(g => g.name)
+                },
                 // @ts-ignore
                 sources: episode.sources.map(source => {
                     return {
