@@ -8,7 +8,7 @@ To deploy Enime API, you need following services:
 1. Redis - You can get a free hosting at https://upstash.com/
 2. PostgresSQL - You can get a free hosting at https://planetscale.com/
 3. Node.js (>=v16) - You can install it at https://nodejs.org/en/download/
-4. Pnpm - Yuu can install it at https://pnpm.io/
+4. Pnpm - You can install it at https://pnpm.io/
 5. Webshare (Optional) - You can get the free plan at https://www.webshare.io/
 
 ### Steps
@@ -22,7 +22,8 @@ REDIS_HOST={Redis host}
 REDIS_PORT={Redis port}
 REDIS_PASSWORD={Redis password}
 ```
-3. Run ``pnpm run dev`` and the application will start at desginated port (default 3000 if not explicitly set)
+3. Initialize prisma with ``pnpm prisma:generate``
+4. Run ``pnpm run dev`` and the application will start at desginated port (default 3000 if not explicitly set)
 
 ### Docker
 1. Run ``docker pull enime/api:1.0``
