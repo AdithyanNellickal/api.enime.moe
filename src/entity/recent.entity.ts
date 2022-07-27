@@ -3,7 +3,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export default class Recent {
     @ApiProperty({
-        description: "Episodes that have been recently released"
+        description: "Episodes that have been recently released",
+        type: Episode,
+        isArray: true
     })
     data: Episode[];
 

@@ -10,7 +10,8 @@ export default class Episode {
     id: string;
 
     @ApiProperty({
-        description: "Anime that has this episode"
+        description: "Anime that has this episode",
+        type: Anime
     })
     anime: Anime;
 
@@ -34,6 +35,8 @@ export default class Episode {
 
     @ApiProperty({
         description: "Episode sources",
+        type: Source,
+        isArray: true
     })
     sources: Source[];
 }

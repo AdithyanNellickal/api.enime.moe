@@ -3,7 +3,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export default class Search {
     @ApiProperty({
-        description: "Anime entries that match the search query"
+        description: "Anime entries that match the search query",
+        type: Anime,
+        isArray: true
     })
     data: Anime[];
 
