@@ -18,7 +18,8 @@ export default class EpisodeController {
     @ApiOperation({ operationId: "Get episode", summary: "Get an episode object with provided ID" })
     @ApiResponse({
         status: 200,
-        description: "The found episode object with the ID provided"
+        description: "The found episode object with the ID provided",
+        type: Episode
     })
     @ApiExtraModels(Source)
     async get(@Param("id") id: string): Promise<Episode> {

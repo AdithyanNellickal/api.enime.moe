@@ -22,7 +22,8 @@ export default class RecentController {
     @ApiOperation({ operationId: "Fetch recent episode releases", summary: "Get recent episode releases" })
     @ApiResponse({
         status: 200,
-        description: "The list of recent episode releases, paginated"
+        description: "The list of recent episode releases, paginated",
+        type: Recent
     })
     async recent(@Query("page") page: number, @Query("perPage") perPage: number): Promise<Recent> {
         if (!page || page <= 0) page = 1;

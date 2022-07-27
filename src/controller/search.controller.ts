@@ -23,7 +23,8 @@ export default class SearchController {
     @ApiOperation({ operationId: "Search Anime", summary: "Search anime based on query" })
     @ApiResponse({
         status: 200,
-        description: "The list of anime matched from search query"
+        description: "The list of anime matched from search query",
+        type: Search
     })
     async search(@Param("query") query: string, @Query("page") page: number, @Query("perPage") perPage: number): Promise<Search> {
         if (!page || page <= 0) page = 1;
