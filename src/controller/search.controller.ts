@@ -26,7 +26,7 @@ export default class SearchController {
         description: "The list of anime matched from search query",
         type: Search
     })
-    async search(@Param("query") query: string, @Query("page") page: number, @Query("perPage") perPage: number) {
+    async search(@Param("query") query: string, @Query("page") page: number, @Query("perPage") perPage: number): Promise<Search> {
         if (!page || page <= 0) page = 1;
         if (!perPage || perPage <= 0) perPage = 20;
         perPage = Math.min(100, perPage);
@@ -68,6 +68,8 @@ export default class SearchController {
                 ...anime
             }
         })
+
+        // @ts-ignore
         return results;
     }
 }

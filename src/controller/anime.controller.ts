@@ -17,11 +17,10 @@ export default class AnimeController {
     @ApiOperation({ summary: "List all anime available in the service", deprecated: true })
     @ApiResponse({
         status: 200,
-        description: "All anime objects in the service",
-        type: Array<Anime>
+        description: "All anime objects in the service"
     })
     @CacheTTL(600)
-    async all() {
+    async all(): Promise<Anime[]> {
         const all = await this.databaseService.anime.findMany({
             include: {
                 genre: {
@@ -44,6 +43,7 @@ export default class AnimeController {
             }
         });
 
+        // @ts-ignore
         return all.map(anime => {
             delete anime["title_english"];
             delete anime["title_romaji"];
@@ -74,7 +74,7 @@ export default class AnimeController {
         type: Anime
     })
     @CacheTTL(300)
-    async get(@Param("id") id: string) {
+    async get(@Param("id") id: string): Promise<Anime> {
         const anime = await this.databaseService.anime.findFirst({
             where: {
                 OR: [
@@ -114,6 +114,7 @@ export default class AnimeController {
         return {
             ...anime,
             genre: anime.genre.map(g => g.name),
+            // @ts-ignore
             episodes: anime.episodes.map(episode => {
                 return {
                     ...episode,

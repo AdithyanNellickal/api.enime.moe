@@ -14,14 +14,14 @@ export default class EpisodeController {
 
     @Get(":id")
     @CacheTTL(300)
-    @ApiOperation({ summary: "Get an episode objec with provided ID" })
+    @ApiOperation({ summary: "Get an episode object with provided ID" })
     @ApiResponse({
         status: 200,
         description: "The found episode object with the ID provided",
         type: Episode
     })
     @ApiExtraModels(Source)
-    async get(@Param("id") id: string) {
+    async get(@Param("id") id: string): Promise<Episode> {
         const episode = await this.databaseService.episode.findUnique({
             where: {
                 id: id
@@ -51,6 +51,7 @@ export default class EpisodeController {
             ...episode,
             // @ts-ignore
             anime: clearAnimeField(episode.anime),
+            // @ts-ignore
             sources: episode.sources.map(source => {
                 return {
                     ...source,

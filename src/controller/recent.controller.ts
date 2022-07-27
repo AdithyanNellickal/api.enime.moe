@@ -24,7 +24,7 @@ export default class RecentController {
         description: "The list of recent episode releases, paginated",
         type: Recent
     })
-    async recent(@Query("page") page: number, @Query("perPage") perPage: number) {
+    async recent(@Query("page") page: number, @Query("perPage") perPage: number): Promise<Recent> {
         if (!page || page <= 0) page = 1;
         if (!perPage || perPage <= 0) perPage = 20;
         perPage = Math.min(100, perPage);
@@ -64,6 +64,7 @@ export default class RecentController {
             }
         });
 
+        // @ts-ignore
         return recent;
     }
 }
