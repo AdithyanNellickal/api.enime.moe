@@ -10,9 +10,7 @@ export default class Zoro extends Scraper {
     override enabled = true;
     override infoOnly = true;
 
-    private readonly host = 'https://mzzcloud.life';
-    private readonly host2 = 'https://rabbitstream.net';
-    private readonly host3 = 'https://rapid-cloud.ru';
+    private readonly host = 'https://rapid-cloud.ru';
 
     async getRawSource(sourceUrl, referer) {
         if (!(sourceUrl instanceof URL)) sourceUrl = new URL(sourceUrl);
@@ -40,11 +38,7 @@ export default class Zoro extends Scraper {
 
         if (videoUrl.href.includes("rapid-cloud.ru")) {
             response = await fetch(
-                `${this.host3}/ajax/embed-6/getSources?id=${id}&sId=zIlsAXDw5t76TRyfhrDY`
-            );
-        } else {
-            response = await fetch(
-                `${this.host}/ajax/embed-4/getSources?id=${id}`
+                `${this.host}/ajax/embed-6/getSources?id=${id}&sId=zIlsAXDw5t76TRyfhrDY`
             );
         }
 
