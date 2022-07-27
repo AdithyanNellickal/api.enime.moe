@@ -5,6 +5,9 @@ import { createPaginator } from 'prisma-pagination';
 import { PaginateFunction } from 'prisma-pagination/src';
 import Prisma from '@prisma/client';
 import { clearAnimeField } from '../helper/model';
+import { ApiExcludeEndpoint, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import Recent from '../entity/recent.entity';
+import Search from '../entity/search.entity';
 
 @Controller("/search")
 export default class SearchController {
@@ -17,7 +20,13 @@ export default class SearchController {
     @Get(":query")
     @CacheTTL(300)
     @Throttle(5, 60)
-    async recent(@Param("query") query: string, @Query("page") page: number, @Query("perPage") perPage: number) {
+    @ApiOperation({ summary: "Search anime based on query" })
+    @ApiResponse({
+        status: 200,
+        description: "The list of anime matched from search query",
+        type: Search
+    })
+    async search(@Param("query") query: string, @Query("page") page: number, @Query("perPage") perPage: number) {
         if (!page || page <= 0) page = 1;
         if (!perPage || perPage <= 0) perPage = 20;
         perPage = Math.min(100, perPage);

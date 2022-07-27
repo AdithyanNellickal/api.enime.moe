@@ -3,14 +3,23 @@ import DatabaseService from '../database/database.service';
 import { SkipThrottle } from '@nestjs/throttler';
 import cuid from 'cuid';
 import { clearAnimeField } from '../helper/model';
+import { ApiExcludeEndpoint, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import Anime from '../entity/anime.entity';
 
 @SkipThrottle()
 @Controller("/anime")
+@ApiTags("anime")
 export default class AnimeController {
     constructor(private readonly databaseService: DatabaseService) {
     }
 
     @Get()
+    @ApiOperation({ summary: "List all anime available in the service", deprecated: true })
+    @ApiResponse({
+        status: 200,
+        description: "All anime objects in the service",
+        type: Array<Anime>
+    })
     @CacheTTL(600)
     async all() {
         const all = await this.databaseService.anime.findMany({
@@ -58,8 +67,14 @@ export default class AnimeController {
     }
 
     @Get(":id")
+    @ApiOperation({ summary: "Get an anime object in the service with ID or slug" })
+    @ApiResponse({
+        status: 200,
+        description: "The found anime object with the ID or slug provided",
+        type: Anime
+    })
     @CacheTTL(300)
-    async get(@Param("id") id) {
+    async get(@Param("id") id: string) {
         const anime = await this.databaseService.anime.findFirst({
             where: {
                 OR: [

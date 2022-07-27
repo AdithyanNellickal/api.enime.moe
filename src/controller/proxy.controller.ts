@@ -14,9 +14,11 @@ import { NoCache } from '../cache/no-cache.decorator';
 import { Cache } from 'cache-manager';
 import fetch from 'node-fetch';
 import { RawSource } from '../types/global';
+import { ApiExcludeController } from '@nestjs/swagger';
 
 @Controller("/proxy")
 @Injectable()
+@ApiExcludeController()
 export default class ProxyController {
 
     constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private readonly databaseService: DatabaseService, private readonly scraperService: ScraperService) {
@@ -25,8 +27,8 @@ export default class ProxyController {
     @Get("/source/:id/subtitle")
     @Throttle(10, 60)
     @NoCache()
-    async sourceSubtitleProxy(@Param() params, @Res() res) {
-        const id = params.id.replace(/\.[^/.]+$/, "");
+    async sourceSubtitleProxy(@Param("id") id, @Res() res) {
+        id = id.replace(/\.[^/.]+$/, "");
         const rawSource = await this.getRawSource(id);
 
         return res.redirect(302, rawSource.subtitle);
@@ -35,8 +37,8 @@ export default class ProxyController {
     @Get("/source/:id")
     @Throttle(10, 60)
     @NoCache()
-    async sourceProxy(@Param() params, @Res() res) {
-        const id = params.id.replace(/\.[^/.]+$/, "");
+    async sourceProxy(@Param("id") id, @Res() res) {
+        id = id.replace(/\.[^/.]+$/, "");
         const rawSource = await this.getRawSource(id);
 
         return res.redirect(302, rawSource.video);

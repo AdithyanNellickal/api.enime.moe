@@ -5,7 +5,9 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import DatabaseService from './database/database.service';
-import helmet from '@fastify/helmet';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as fs from 'fs';
+import path from 'path';
 
 export const bootstrap = async () => {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -16,11 +18,30 @@ export const bootstrap = async () => {
   );
   const port = process.env.PORT;
 
+  if (!process.env.PRODUCTION) {
+    const options = new DocumentBuilder()
+        .setTitle("Enime API")
+        .setDescription("An open source API service for developers to access anime info (as well as their video sources)")
+        .setContact("Enime Team", "https://api.enime.moe", "team@enime.moe")
+        .addTag("anime")
+        .addTag("recent")
+        .addTag("episode")
+        .addTag("search")
+        .addTag("proxy")
+        .setVersion("1.0")
+        .build();
+
+    const document = SwaggerModule.createDocument(app, options);
+
+    console.log(document)
+    fs.writeFileSync(path.join(__dirname, "../api-definition.json"), JSON.stringify(document));
+  }
+
   const databaseService: DatabaseService = app.get(DatabaseService);
   await databaseService.enableShutdownHooks(app);
 
   app.enableCors();
-  // await app.register(helmet);
+
   await app.listen(port || 3000, "0.0.0.0");
 
   return app;

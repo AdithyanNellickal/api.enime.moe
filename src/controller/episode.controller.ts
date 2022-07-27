@@ -2,6 +2,9 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { CacheTTL, Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
 import { clearAnimeField } from '../helper/model';
+import { ApiExtraModels, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import Episode from '../entity/episode.entity';
+import Source from '../entity/source.entity';
 
 @SkipThrottle()
 @Controller("/episode")
@@ -11,7 +14,14 @@ export default class EpisodeController {
 
     @Get(":id")
     @CacheTTL(300)
-    async get(@Param("id") id) {
+    @ApiOperation({ summary: "Get an episode objec with provided ID" })
+    @ApiResponse({
+        status: 200,
+        description: "The found episode object with the ID provided",
+        type: Episode
+    })
+    @ApiExtraModels(Source)
+    async get(@Param("id") id: string) {
         const episode = await this.databaseService.episode.findUnique({
             where: {
                 id: id
@@ -39,6 +49,7 @@ export default class EpisodeController {
 
         return {
             ...episode,
+            // @ts-ignore
             anime: clearAnimeField(episode.anime),
             sources: episode.sources.map(source => {
                 return {
