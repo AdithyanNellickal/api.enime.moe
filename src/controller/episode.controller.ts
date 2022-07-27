@@ -2,12 +2,13 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { CacheTTL, Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import DatabaseService from '../database/database.service';
 import { clearAnimeField } from '../helper/model';
-import { ApiExtraModels, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiExtraModels, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import Episode from '../entity/episode.entity';
 import Source from '../entity/source.entity';
 
 @SkipThrottle()
 @Controller("/episode")
+@ApiTags("episode")
 export default class EpisodeController {
     constructor(private readonly databaseService: DatabaseService) {
     }
@@ -17,8 +18,7 @@ export default class EpisodeController {
     @ApiOperation({ summary: "Get an episode object with provided ID" })
     @ApiResponse({
         status: 200,
-        description: "The found episode object with the ID provided",
-        type: Episode
+        description: "The found episode object with the ID provided"
     })
     @ApiExtraModels(Source)
     async get(@Param("id") id: string): Promise<Episode> {

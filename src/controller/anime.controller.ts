@@ -70,8 +70,7 @@ export default class AnimeController {
     @ApiOperation({ summary: "Get an anime object in the service with ID or slug" })
     @ApiResponse({
         status: 200,
-        description: "The found anime object with the ID or slug provided",
-        type: Anime
+        description: "The found anime object with the ID or slug provided"
     })
     @CacheTTL(300)
     async get(@Param("id") id: string): Promise<Anime> {
