@@ -119,7 +119,7 @@ export default class Zoro extends Scraper {
         const results = [];
 
         $(".film_list-wrap > div.flw-item").each((i, el) => {
-            const title = $(el).find(".film-name").text();
+            const title = $(el).find(".film-name > a.dynamic-name").attr("title");
             const url = $(el).find(".film-name > a").attr("href");
 
             const parsedUrl = new URL(this.url() + url);
@@ -145,14 +145,27 @@ export default class Zoro extends Scraper {
         let highestRating = Number.MIN_VALUE, highestEntry = undefined, highestEntryUsedTitle = undefined;
 
         let pass = false;
+        // Attempt 1 - Match the first zoro search element
         const firstResult = results[0]; // It's not exactly sort by relevance but first result is still a viable try, if we can get this right in one hit it can save a lot of time
         for (let alt of [t.english, t.romaji, t.native, ...(t.synonyms || [])]) {
             if (!alt) continue;
 
-            if (deepMatch(alt, firstResult.title)) return firstResult;
+            if (deepMatch(alt, firstResult.title, false)) return firstResult;
         }
 
         if (!pass) {
+            // Attempt 2 - match all zoro search elements with a fuzzy match without sorting by relevance
+            for (let alt of [t.english, t.romaji, t.native, ...(t.synonyms || [])]) {
+                if (!alt) continue;
+
+                for (let result of results) {
+                    if (deepMatch(alt, result.title)) {
+                        return result;
+                    }
+                }
+            }
+
+            // Attempt 3 - Find the best possible match and test against it with deepMatch, which is the last matching attempt we can do
             for (let alt of [t.english, t.romaji, t.native, ...(t.synonyms || [])]) {
                 if (!alt) continue;
 
