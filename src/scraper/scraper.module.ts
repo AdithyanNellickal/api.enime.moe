@@ -32,12 +32,16 @@ export default class ScraperModule implements OnModuleInit {
     async matchAnime(title, scraper: Scraper): Promise<AnimeWebPage> {
         if (!("original" in title)) title.original = true;
 
+        title.tries = title.tries++ || 1;
+
         let original = title.original, special = title.special;
         if (original) title.current = title.english || title.romaji;
 
         let matchedEntry = await scraper.match(title);
 
         if (!matchedEntry) {
+            if (title.tries >= 50) throw new Error(`Anime matching for title ${title} resulted into a potential infinite loop, skipping this match to preserve the scraper functionality`);
+
             if (special) {
                 if (title.english?.includes(":") || title.romaji?.includes(":")) {
                     let prefixEnglish = title.english?.split(":")[0];
@@ -59,23 +63,25 @@ export default class ScraperModule implements OnModuleInit {
                 return undefined;
             }
 
-            if ((title.current === title.english) && !!title.romaji) {
-                title.current = title.romaji;
-                title.original = false;
+            if (title.english !== title.romaji) {
+                if ((title.current === title.english) && !!title.romaji) {
+                    title.current = title.romaji;
+                    title.original = false;
 
-                return this.matchAnime(title, scraper);
-            }
+                    return this.matchAnime(title, scraper);
+                }
 
-            if ((title.current === title.romaji) && (title.current !== transform(title.romaji))) {
-                title.current = transform(title.romaji);
+                if ((title.current === title.romaji) && (title.current !== transform(title.romaji))) {
+                    title.current = transform(title.romaji);
 
-                return this.matchAnime(title, scraper);
-            }
+                    return this.matchAnime(title, scraper);
+                }
 
-            if (title.current === transform(title.romaji)) {
-                title.special = true;
+                if (title.current === transform(title.romaji)) {
+                    title.special = true;
 
-                return this.matchAnime(title, scraper);
+                    return this.matchAnime(title, scraper);
+                }
             }
 
             return undefined;

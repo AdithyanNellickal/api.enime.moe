@@ -5,6 +5,7 @@ import * as CryptoJS from 'crypto-js';
 import fetch from 'node-fetch';
 import * as similarity from 'string-similarity';
 import { transform } from '../../helper/romaji';
+import { deepMatch } from '../../helper/match';
 
 // Credit to https://github.com/riimuru/gogoanime/blob/46edf3de166b7c5152919d6ac12ab6f55d9ed35b/lib/helpers/extractors/goload.js
 export default class GogoanimeScraper extends Scraper {
@@ -151,12 +152,14 @@ export default class GogoanimeScraper extends Scraper {
 
         let cleanedTitle = this.clean(title)
 
-        if (t.english && t.english.toLowerCase() === title.toLowerCase()) pass = true;
-        if (t.romaji && t.romaji.toLowerCase() === title.toLowerCase()) pass = true;
+        for (let alt of [t.english, t.romaji, t.native, ...(t.synonyms || [])]) {
+            if (alt && deepMatch(alt, title)) {
+                pass = true;
+                break;
+            }
+        }
 
-        if (t.english && similarity.compareTwoStrings(t.english.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
-        if (t.romaji && similarity.compareTwoStrings(t.romaji.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
-        if (!t.original && t.current && similarity.compareTwoStrings(t.current.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.8) pass = true;
+        if (!t.original && t.current && similarity.compareTwoStrings(t.current.toLowerCase(), cleanedTitle.toLowerCase()) >= 0.75) pass = true;
 
         if (!pass) return undefined;
 

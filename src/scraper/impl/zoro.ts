@@ -4,6 +4,7 @@ import * as similarity from 'string-similarity';
 import { Episode } from '../../types/global';
 import { clean, removeSpecialChars } from '../../helper/title';
 import fetch from 'node-fetch';
+import { deepMatch } from '../../helper/match';
 
 export default class Zoro extends Scraper {
     override enabled = true;
@@ -130,7 +131,7 @@ export default class Zoro extends Scraper {
             });
         });
 
-        if (!results) return undefined;
+        if (!results.length) return undefined;
 
         // Zoro.to has a weird search that it's not ranked exactly by relevance. So what we're going to do here is to find all results from first page (relevance based)
         // then after that, find the best match entry based on both english and romaji title
@@ -159,15 +160,7 @@ export default class Zoro extends Scraper {
 
         if (!highestEntry) return undefined;
 
-        let pass = false;
-
-        if (similarity.compareTwoStrings(removeSpecialChars(highestEntryUsedTitle), highestEntry.title) >= 0.75) pass = true;
-        if (similarity.compareTwoStrings(highestEntryUsedTitle, removeSpecialChars(highestEntry.title)) >= 0.75) pass = true;
-        if (similarity.compareTwoStrings(removeSpecialChars(highestEntryUsedTitle), removeSpecialChars(highestEntry.title)) >= 0.75) pass = true;
-        if (similarity.compareTwoStrings(clean(highestEntryUsedTitle), highestEntry.title) >= 0.75) pass = true;
-        if (similarity.compareTwoStrings(highestEntryUsedTitle, clean(highestEntry.title)) >= 0.75) pass = true;
-        if (similarity.compareTwoStrings(clean(highestEntryUsedTitle), clean(highestEntry.title)) >= 0.75) pass = true;
-
+        let pass = deepMatch(highestEntryUsedTitle, highestEntry.title);
         if (!pass) return undefined;
 
         return highestEntry;
