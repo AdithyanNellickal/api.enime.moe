@@ -5,7 +5,7 @@ import { createPaginator } from 'prisma-pagination';
 import { PaginateFunction } from 'prisma-pagination/src';
 import Prisma from '@prisma/client';
 import { clearAnimeField } from '../helper/model';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import Search from '../entity/search.entity';
 
 @Controller("/search")
@@ -25,6 +25,22 @@ export default class SearchController {
         status: 200,
         description: "The list of anime matched from search query",
         type: Search
+    })
+    @ApiResponse({
+        status: 429,
+        description: "The API throttling has been reached, check response headers for more information"
+    })
+    @ApiParam({
+        type: Number,
+        name: "page",
+        required: false,
+        description: "The page number of search list, default to 1"
+    })
+    @ApiParam({
+        type: Number,
+        name: "perPage",
+        required: false,
+        description: "How many elements per page should this response have? Minimum: 1, maximum: 100"
     })
     async search(@Param("query") query: string, @Query("page") page: number, @Query("perPage") perPage: number): Promise<Search> {
         if (!page || page <= 0) page = 1;

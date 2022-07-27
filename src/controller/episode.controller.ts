@@ -21,6 +21,10 @@ export default class EpisodeController {
         description: "The found episode object with the ID provided",
         type: Episode
     })
+    @ApiResponse({
+        status: 404,
+        description: "The episode cannot be found within the database for given ID"
+    })
     @ApiExtraModels(Source)
     async get(@Param("id") id: string): Promise<Episode> {
         const episode = await this.databaseService.episode.findUnique({

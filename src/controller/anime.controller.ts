@@ -3,7 +3,7 @@ import DatabaseService from '../database/database.service';
 import { SkipThrottle } from '@nestjs/throttler';
 import cuid from 'cuid';
 import { clearAnimeField } from '../helper/model';
-import { ApiExcludeEndpoint, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import Anime from '../entity/anime.entity';
 
 @SkipThrottle()
@@ -74,6 +74,10 @@ export default class AnimeController {
         status: 200,
         description: "The found anime object with the ID or slug provided",
         type: Anime
+    })
+    @ApiResponse({
+        status: 404,
+        description: "The anime cannot be found within the database for given ID"
     })
     @CacheTTL(300)
     async get(@Param("id") id: string): Promise<Anime> {
