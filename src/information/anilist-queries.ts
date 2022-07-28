@@ -10,6 +10,7 @@ export const AIRING_ANIME = gql`query ($season: MediaSeason, $year: Int, $format
       id
       idMal
       title {
+        userPreferred
         romaji
         native
         english

@@ -52,6 +52,7 @@ export default class Anime {
         }
     })
     title: {
+        userPreferred: string | null,
         english: string | null,
         romaji: string | null,
         native: string | null

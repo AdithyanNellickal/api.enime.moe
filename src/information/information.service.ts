@@ -92,7 +92,7 @@ export default class InformationService {
             const animeDbObject = {
                 title: anime.title,
                 anilistId: anime.id,
-                slug: slugify(anime.title.english || anime.title.romaji).toLowerCase(),
+                slug: slugify(anime.title.userPreferred || anime.title.english || anime.title.romaji).toLowerCase(),
                 coverImage: anime.coverImage.extraLarge,
                 color: anime.coverImage.color,
                 bannerImage: anime.bannerImage,
