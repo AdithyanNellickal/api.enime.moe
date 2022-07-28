@@ -44,7 +44,9 @@ export default class EpisodeController {
                             select: {
                                 name: true
                             }
-                        }
+                        },
+                        bannerImage: true,
+                        coverImage: true
                     }
                 },
                 sources: {

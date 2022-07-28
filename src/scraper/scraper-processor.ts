@@ -103,7 +103,7 @@ export default async function (job: Job<ScraperJobData>, cb: DoneCallback) {
                                 }
                             })
                         } else {
-                            if (scrapedEpisode.title) {
+                            if (scrapedEpisode.title && !episodeDb.title) {
                                 episodeDb = await databaseService.episode.update({
                                     where: {
                                         id: episodeDb.id
