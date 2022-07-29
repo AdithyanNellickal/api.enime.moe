@@ -76,8 +76,8 @@ export default class RecentController {
             },
         }, { page: page, perPage: perPage })
 
-        recent.data = recent.data.map(episode => {
-            const sources = episode.filter(episode => episode.sources?.length).sources.map(source => {
+        recent.data = recent.data.filter(episode => episode.sources?.length).map(episode => {
+            const sources = episode.sources.map(source => {
                 return {
                     id: source.id,
                     url: `https://api.enime.moe/proxy/source/${source.id}`,
