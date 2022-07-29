@@ -1,6 +1,6 @@
 import Scraper, { USER_AGENT } from '../scraper';
 import * as cheerio from 'cheerio';
-import { AnimeWebPage, Episode, SourceType } from '../../types/global';
+import { AnimeWebPage, Episode, RawSource, SourceType } from '../../types/global';
 import * as CryptoJS from 'crypto-js';
 import fetch from 'node-fetch';
 import * as similarity from 'string-similarity';
@@ -11,11 +11,23 @@ import { deepMatch } from '../../helper/match';
 export default class GogoanimeScraper extends Scraper {
     override enabled = true;
     override infoOnly = false;
+    override priority = 1;
+    override consumetServiceUrl = "https://consumet-api.herokuapp.com/anime/gogoanime/";
 
     ENCRYPTION_KEYS_URL =
         "https://raw.githubusercontent.com/justfoolingaround/animdl-provider-benchmarks/master/api/gogoanime.json";
 
     keys = undefined;
+
+    async getSourceConsumet(sourceUrl: string | URL): Promise<RawSource> {
+        if (typeof sourceUrl === "string") sourceUrl = new URL(sourceUrl);
+
+        let rawSourceUrl = (await (await fetch(`${this.consumetServiceUrl}${sourceUrl.pathname}`)).json()).sources[0].url;
+        return {
+            video: rawSourceUrl,
+            subtitle: undefined
+        }
+    }
 
     async fetchKeys() {
         if (this.keys) return this.keys;

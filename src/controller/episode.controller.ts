@@ -26,7 +26,7 @@ export default class EpisodeController {
         description: "The episode cannot be found within the database for given ID"
     })
     @ApiExtraModels(Source)
-    async get(@Param("id") id: string): Promise<Episode> {
+    async get(@Param("id") id: string) {
         const episode = await this.databaseService.episode.findUnique({
             where: {
                 id: id
@@ -51,7 +51,14 @@ export default class EpisodeController {
                 },
                 sources: {
                     select: {
-                        id: true
+                        id: true,
+                        website: {
+                            select: {
+                                name: true,
+                                priority: true,
+                                subtitle: true
+                            }
+                        }
                     }
                 }
             }
@@ -59,21 +66,27 @@ export default class EpisodeController {
 
         if (!episode) throw new NotFoundException(`The episode with ID ${id} does not exist`);
 
+        const sources = episode.sources.map(source => {
+            return {
+                id: source.id,
+                url: `https://api.enime.moe/proxy/source/${source.id}`,
+                website: source.website.name,
+                priority: source.website.priority,
+                subtitle: source.website.subtitle
+            }
+        });
+
+        sources.sort((a, b) => a.priority < b.priority);
+
         return {
             ...episode,
-            // @ts-ignore
             anime: {
                 // @ts-ignore
                 ...clearAnimeField(episode.anime),
                 genre: episode.anime.genre.map(g => g.name)
             },
             // @ts-ignore
-            sources: episode.sources.map(source => {
-                return {
-                    ...source,
-                    url: `https://api.enime.moe/proxy/source/${source.id}`
-                }
-            })
+            sources: sources
         };
     }
 }

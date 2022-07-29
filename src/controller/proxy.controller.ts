@@ -68,19 +68,15 @@ export default class ProxyController {
         if (!scraper) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
 
         let rawSource = undefined;
-        const url = new URL(source.referer.replaceAll("//", "/"));
+        const url = source.referer ? new URL(source.referer.replaceAll("//", "/")) : undefined;
 
         try {
-            rawSource = await scraper.getRawSource(source.url, url.href);
-            if (!rawSource) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
+            rawSource = await scraper.getRawSource(source.url, url?.href);
         } catch (e) {
-            let rawSourceUrl = (await (await fetch(`https://consumet-api.herokuapp.com/anime/gogoanime/watch${url.pathname}`)).json()).sources[0].url;
+            rawSource = scraper.getSourceConsumet(url || source.url);
             Logger.error(`Error occurred while trying to fetch source ID ${source.id}, falling back to Consumet service`, e);
 
-            rawSource = {
-                video: rawSourceUrl,
-                subtitle: undefined
-            }
+            if (!rawSource) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
         }
 
         await this.cacheManager.set(cacheKey, JSON.stringify(rawSource), { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)

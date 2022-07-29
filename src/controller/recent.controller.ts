@@ -64,13 +64,31 @@ export default class RecentController {
                 sources: {
                     select: {
                         id: true,
-                        url: true
+                        website: {
+                            select: {
+                                name: true,
+                                priority: true,
+                                subtitle: true
+                            }
+                        }
                     }
                 }
             },
         }, { page: page, perPage: perPage })
 
         recent.data = recent.data.map(episode => {
+            const sources = episode.sources.map(source => {
+                return {
+                    id: source.id,
+                    url: `https://api.enime.moe/proxy/source/${source.id}`,
+                    website: source.website.name,
+                    priority: source.website.priority,
+                    subtitle: source.website.subtitle
+                }
+            });
+
+            sources.sort((a, b) => a.priority < b.priority);
+
             return {
                 ...episode,
                 // @ts-ignore
@@ -81,12 +99,7 @@ export default class RecentController {
                     genre: episode.anime.genre.map(g => g.name)
                 },
                 // @ts-ignore
-                sources: episode.sources.map(source => {
-                    return {
-                        ...source,
-                        url: `https://api.enime.moe/proxy/source/${source.id}`
-                    }
-                })
+                sources: sources
             }
         });
 

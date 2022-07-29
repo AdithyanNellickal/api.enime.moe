@@ -92,7 +92,6 @@ model Source {
     referer     String?
     resolution  String?
     format      String?
-    subtitle    String?
     createdAt   DateTime   @default(now())
     updatedAt   DateTime   @updatedAt
 
@@ -111,7 +110,9 @@ model Relation {
 model Website {
     id          String     @id  @default(cuid())
     name        String
+    priority    Int?       @default(-1)
     url         String     @unique
+    subtitle    Boolean    @default(false)
     locale      String
     sources     Source[]
 

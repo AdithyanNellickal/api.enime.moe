@@ -126,6 +126,7 @@ export default class InformationModule implements OnModuleInit {
     }
 
     async onModuleInit() {
-        await this.refreshAnimeInfo();
+        // await this.pushToScrapeQueue();
+        // await this.refreshAnimeInfo();
     }
 }

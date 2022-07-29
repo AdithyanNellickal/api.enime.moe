@@ -13,6 +13,7 @@ export default class AnimeController {
     constructor(private readonly databaseService: DatabaseService) {
     }
 
+    /*
     @Get()
     @ApiOperation({ operationId: "List anime", summary: "List all anime available in the service", deprecated: true })
     @ApiResponse({
@@ -66,7 +67,7 @@ export default class AnimeController {
                 })
             }
         });
-    }
+    }*/
 
     @Get(":id")
     @ApiOperation({ operationId: "Get anime", summary: "Get an anime object in the service with ID or slug" })
@@ -125,10 +126,7 @@ export default class AnimeController {
                 return {
                     ...episode,
                     sources: episode.sources.map(source => {
-                        return {
-                            ...source,
-                            url: `https://api.enime.moe/proxy/source/${source.id}`
-                        }
+                        return source.id
                     })
                 }
             })

@@ -1,16 +1,33 @@
 import Scraper from '../scraper';
 import * as cheerio from 'cheerio';
 import * as similarity from 'string-similarity';
-import { Episode } from '../../types/global';
+import { Episode, RawSource } from '../../types/global';
 import { clean, removeSpecialChars } from '../../helper/title';
 import fetch from 'node-fetch';
 import { deepMatch } from '../../helper/match';
 
 export default class Zoro extends Scraper {
     override enabled = true;
-    override infoOnly = true;
+    override infoOnly = false;
+    override subtitle = true;
+    override priority = 2;
+    override consumetServiceUrl = "https://consumet-api.herokuapp.com/anime/zoro/";
 
     private readonly host = 'https://rapid-cloud.ru';
+
+    async getSourceConsumet(sourceUrl: string | URL): Promise<RawSource> {
+        if (typeof sourceUrl === "string") sourceUrl = new URL(sourceUrl);
+
+        let rawSource = (await (await fetch(`${this.consumetServiceUrl}${sourceUrl.pathname.replace("?ep=", "$episode$")}`)).json());
+
+        let primarySource = rawSource.sources.find(source => source.quality === "auto");
+        let subtitle = rawSource.subtitles.find(subtitle => subtitle.lang.toLowerCase() === "English");
+
+        return {
+            video: primarySource.url,
+            subtitle: subtitle.url
+        }
+    }
 
     async getRawSource(sourceUrl, referer) {
         if (!(sourceUrl instanceof URL)) sourceUrl = new URL(sourceUrl);
@@ -34,9 +51,9 @@ export default class Zoro extends Scraper {
         response = await fetch(`${this.url()}/ajax/v2/episode/sources?id=${serverId}`);
 
         const videoUrl = (await response.json()).link;
-        const id = videoUrl.href.split('/').pop()?.split('?')[0];
+        const id = videoUrl.split('/').pop()?.split('?')[0];
 
-        if (videoUrl.href.includes("rapid-cloud.ru")) {
+        if (videoUrl.includes("rapid-cloud.ru")) {
             response = await fetch(
                 `${this.host}/ajax/embed-6/getSources?id=${id}&sId=zIlsAXDw5t76TRyfhrDY`
             );
@@ -183,7 +200,7 @@ export default class Zoro extends Scraper {
     }
 
     name(): string {
-        return "zoro";
+        return "Zoro";
     }
 
     url(): string {

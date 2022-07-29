@@ -7,6 +7,9 @@ export const USER_AGENT =
 export default abstract class Scraper {
     public infoOnly = false;
     public enabled = false;
+    public subtitle = false;
+    public consumetServiceUrl = undefined;
+    public priority = -1;
 
     public websiteMeta: WebsiteMeta = undefined;
 
@@ -23,6 +26,10 @@ export default abstract class Scraper {
     abstract match(title): AnimeWebPage | Promise<AnimeWebPage>;
 
     abstract fetch(path: string, number: number, endNumber: number | undefined): Episode | Promise<Episode> | Promise<Episode[]> | Episode[];
+
+    async getSourceConsumet(sourceUrl: string | URL): Promise<RawSource> {
+        return undefined;
+    }
 
     async getRawSource(sourceUrl: string | URL, referer = undefined): Promise<RawSource> {
         return undefined;

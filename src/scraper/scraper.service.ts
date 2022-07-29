@@ -35,13 +35,21 @@ export default class ScraperService {
                 create: {
                     url: scraper.url(),
                     locale: scraper.locale(),
-                    name: scraper.name()
+                    name: scraper.name(),
+                    priority: scraper.priority,
+                    subtitle: scraper.subtitle
                 },
-                update: {}
+                update: {
+                    url: scraper.url(),
+                    locale: scraper.locale(),
+                    name: scraper.name(),
+                    priority: scraper.priority,
+                    subtitle: scraper.subtitle
+                }
             });
 
             scraper.websiteMeta = {
-                id: website.id
+                id: website.id,
             }
         }
 
