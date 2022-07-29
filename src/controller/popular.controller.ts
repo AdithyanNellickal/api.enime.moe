@@ -36,7 +36,7 @@ export default class PopularController {
         required: false,
         description: "How many elements per page should this response have? Minimum: 1, maximum: 100"
     })
-    async popular(@Param("query") query: string, @Query("page") page: number, @Query("perPage") perPage: number): Promise<Popular> {
+    async popular(@Query("page") page: number, @Query("perPage") perPage: number): Promise<Popular> {
         if (!page || page <= 0) page = 1;
         if (!perPage || perPage <= 0) perPage = 20;
         perPage = Math.min(100, perPage);

@@ -51,7 +51,7 @@ export default class InformationModule implements OnModuleInit {
     }
 
     // Every 10 minutes, we check anime that have don't have "enough episode" stored in the database (mostly the anime source sites update slower than Anilist because subs stuff) so we sync that part more frequently
-    // @Cron(CronExpression.EVERY_10_MINUTES)
+    @Cron(CronExpression.EVERY_10_MINUTES)
     async checkForUpdatedEpisodes() {
         const animeList = await this.databaseService.anime.findMany({
             where: {
@@ -79,7 +79,7 @@ export default class InformationModule implements OnModuleInit {
         });
     }
 
-   // @Cron(CronExpression.EVERY_HOUR)
+    @Cron(CronExpression.EVERY_HOUR)
     async refreshAnimeInfo() {
         const animeList = await this.databaseService.anime.findMany({
             where: {
@@ -103,7 +103,7 @@ export default class InformationModule implements OnModuleInit {
         });
     }
 
-    // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     async pushToScrapeQueue() {
         const eligibleToScrape = await this.databaseService.anime.findMany({
             where: {

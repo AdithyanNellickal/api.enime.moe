@@ -104,6 +104,12 @@ export default class Anime {
     averageScore: number | null;
 
     @ApiProperty({
+        description: "Anime popularity",
+        example: 39358
+    })
+    popularity: number | null;
+
+    @ApiProperty({
         description: "Anime theme color",
         example: "#e45078"
     })
