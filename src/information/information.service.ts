@@ -98,6 +98,7 @@ export default class InformationService {
                 bannerImage: anime.bannerImage,
                 description: anime.description,
                 duration: anime.duration,
+                popularity: anime.popularity,
                 averageScore: anime.averageScore,
                 status: anime.status,
                 season: anime.season,

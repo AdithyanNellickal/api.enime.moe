@@ -79,7 +79,7 @@ export default class ProxyController {
             if (!rawSource) throw new InternalServerErrorException("Cannot proxy this source, please contact administrators.");
         }
 
-        await this.cacheManager.set(cacheKey, JSON.stringify(rawSource), { ttl: 60 * 60 * 5 }); // 5 hour cache (actual expiry time is ~6 hours but just in case)
+        await this.cacheManager.set(cacheKey, JSON.stringify(rawSource), { ttl: 60 * 60 * 4 }); // 4 hour cache (actual expiry time is ~6 hours but just in case)
 
         return rawSource;
     }

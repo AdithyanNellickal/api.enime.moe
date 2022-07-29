@@ -44,6 +44,7 @@ model Anime {
     description         String?
     duration            Int?
     averageScore        Int?
+    popularity          Int?
     color               String?
 
     // Exists solely for search purpose

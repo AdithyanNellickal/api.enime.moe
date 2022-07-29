@@ -22,6 +22,7 @@ import EpisodeController from './controller/episode.controller';
 import RecentController from './controller/recent.controller';
 import SearchController from './controller/search.controller';
 import DatabaseModule from './database/database.module';
+import PopularController from './controller/popular.controller';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -50,7 +51,7 @@ import DatabaseModule from './database/database.module';
           }),
       })
   ],
-  controllers: [AppController, AnimeController, ProxyController, RecentController, SearchController, EpisodeController],
+  controllers: [AppController, AnimeController, ProxyController, RecentController, SearchController, EpisodeController, PopularController],
   providers: [AppService, DatabaseService, ProxyService, ScraperService,
       {
           provide: APP_GUARD,

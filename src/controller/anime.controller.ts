@@ -122,7 +122,7 @@ export default class AnimeController {
             ...anime,
             genre: anime.genre.map(g => g.name),
             // @ts-ignore
-            episodes: anime.episodes.map(episode => {
+            episodes: anime.episodes.filter(episode => episode.sources?.length).map(episode => {
                 return {
                     ...episode,
                     sources: episode.sources.map(source => {
