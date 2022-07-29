@@ -8,8 +8,8 @@ import { deepMatch } from '../../helper/match';
 
 export default class Zoro extends Scraper {
     override enabled = true;
-    override infoOnly = false;
-    override subtitle = true;
+    override infoOnly = true;
+    override subtitle = false;
     override priority = 2;
     override consumetServiceUrl = "https://consumet-api.herokuapp.com/anime/zoro/";
 
