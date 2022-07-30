@@ -116,6 +116,22 @@ export default class Anime {
     color: string | null;
 
     @ApiProperty({
+        description: "ID mappings to other services",
+        example: {
+            "mal": 50709,
+            "anidb": 17097,
+            "kitsu": 45705,
+            "anilist": 143270,
+            "thetvdb": 414057,
+            "anisearch": 16976,
+            "livechart": 11004,
+            "notify.moe": "eDvRCcs7R",
+            "anime-planet": "lycoris-recoil"
+        }
+    })
+    mappings: object;
+
+    @ApiProperty({
         description: "Anime genres",
         example: [
             "Action",

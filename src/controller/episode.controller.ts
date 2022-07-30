@@ -64,7 +64,7 @@ export default class EpisodeController {
             }
         });
 
-        if (!episode || episode.sources?.length) throw new NotFoundException(`The episode with ID ${id} does not exist`);
+        if (!episode) throw new NotFoundException(`The episode with ID ${id} does not exist`);
 
         const sources = episode.sources.map(source => {
             return {
