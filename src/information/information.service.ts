@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { GraphQLClient } from 'graphql-request';
 import utc from 'dayjs/plugin/utc';
 import dayjs from 'dayjs';
@@ -7,12 +7,15 @@ import DatabaseService from '../database/database.service';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import slugify from 'slugify';
+import fetch from 'node-fetch';
+import cuid from 'cuid';
 
 @Injectable()
-export default class InformationService {
+export default class InformationService implements OnModuleInit {
     private readonly client: GraphQLClient;
     private readonly anilistBaseEndpoint = "https://graphql.anilist.co";
     private readonly seasons = ["WINTER", "SPRING", "SUMMER", "FALL"];
+    private readonly animeListMappingEndpoint = "https://raw.githubusercontent.com/Fribb/anime-lists/master/anime-list-full.json";
 
     constructor(private readonly databaseService: DatabaseService, @InjectQueue("scrape") private readonly queue: Queue) {
         this.client = new GraphQLClient(this.anilistBaseEndpoint, {
@@ -23,9 +26,66 @@ export default class InformationService {
         });
 
         if (!process.env.TESTING) dayjs.extend(utc);
-    };
+    }
 
-    async refetchAnime(): Promise<string[]> {
+    async onModuleInit() {
+        // await this.resyncAnime();
+    }
+
+    async resyncAnime(ids: string[] | undefined = undefined) {
+        const mappings = await (await fetch(this.animeListMappingEndpoint)).json();
+
+        let animeList;
+
+        if (!ids?.length) {
+            animeList = await this.databaseService.anime.findMany({
+                select: {
+                    id: true,
+                    anilistId: true
+                }
+            });
+        } else {
+            animeList = await this.databaseService.$transaction(ids.map(id => this.databaseService.anime.findUnique({
+                where: {
+                    id: id
+                },
+                select: {
+                    id: true,
+                    anilistId: true
+                }
+            })))
+        }
+
+        const transactions = [];
+
+        for (let anime of animeList) {
+            let mapping = mappings.find(mapping => mapping?.anilist_id === anime.anilistId);
+            if (!mapping) continue;
+
+            const mappingObject: object = {};
+
+            for (let k in mapping) {
+                if (k === "type") continue;
+
+                mappingObject[k.replace("_id", "")] = mapping[k];
+            }
+
+            transactions.push(this.databaseService.anime.update({
+                where: {
+                    id: anime.id
+                },
+                data: {
+                    mappings: {
+                        ...mappingObject
+                    }
+                }
+            }));
+        }
+
+        await this.databaseService.$transaction(transactions);
+    }
+
+    async refetchAnime(): Promise<object> {
         const currentSeason = Math.floor((new Date().getMonth() / 12 * 4)) % 4;
 
         let previousSeason = currentSeason - 1;
@@ -70,7 +130,10 @@ export default class InformationService {
             requestVariables.page = currentPage;
         }
 
-        let animeIds = [];
+        let createdAnimeIds = [];
+        let updatedAnimeIds = [];
+
+        const transactions = [];
 
         for (let anime of trackingAnime) {
             let nextEpisode = anime.nextAiringEpisode, currentEpisode = 0;
@@ -102,6 +165,7 @@ export default class InformationService {
                 averageScore: anime.averageScore,
                 status: anime.status,
                 season: anime.season,
+                seasonInt: anime.seasonInt,
                 next: nextEpisode,
                 genre: {
                     connectOrCreate: anime.genres.map(genre => {
@@ -118,28 +182,34 @@ export default class InformationService {
             }
 
             if (!animeDb) { // Anime does not exist in our database, immediately push it to scrape
-                animeDb = await this.databaseService.anime.create({
+                let id = cuid();
+                transactions.push(this.databaseService.anime.create({
                     data: {
+                        id: id,
                         ...animeDbObject
                     }
-                });
-                animeIds.push(animeDb.id);
+                }));
+                createdAnimeIds.push(id);
             } else {
                 if (animeDb.currentEpisode !== currentEpisode) { // Anime exists in the database but current episode count from Anilist is not the one we stored in database. This means the anime might have updated, push it to scrape queue
-                    animeIds.push(animeDb.id);
+                    updatedAnimeIds.push(animeDb.id);
                 }
 
-                animeDb = await this.databaseService.anime.update({
+                transactions.push(this.databaseService.anime.update({
                     where: {
                         anilistId: anime.id
                     },
                     data: {
                         ...animeDbObject
                     }
-                })
+                }))
             }
         }
 
-        return animeIds;
+        await this.databaseService.$transaction(transactions);
+        return {
+            created: createdAnimeIds,
+            updated: updatedAnimeIds
+        }
     }
 }

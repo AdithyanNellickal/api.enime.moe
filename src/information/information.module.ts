@@ -33,21 +33,41 @@ export default class InformationModule implements OnModuleInit {
         if (!this.informationWorker) {
             this.informationWorker = fork(path.resolve(__dirname, "./information-worker"));
 
-            this.informationWorker.on("message", async animeIds => {
-                performance.mark("information-fetch-end");
-                Logger.debug(`Refetching completed, took ${performance.measure("information-fetch", "information-fetch-start", "information-fetch-end").duration.toFixed(2)}ms, tracked ${animeIds.length} anime entries.`);
+            this.informationWorker.on("message", async ({ event, data }) => {
+                if (event === "refetch") {
+                    const { created, updated } = data;
 
-                await this.queue.add( { // Higher priority than the daily anime sync
-                    animeIds: animeIds,
-                    infoOnly: false
-                }, {
-                    priority: 4,
-                    removeOnComplete: true
-                });
-            })
+                    performance.mark("information-fetch-end");
+
+                    const animeIds = [...created, ...updated];
+                    Logger.debug(`Refetching completed, took ${performance.measure("information-fetch", "information-fetch-start", "information-fetch-end").duration.toFixed(2)}ms, created ${created.length} anime entries, updated ${updated.length} anime entries.`);
+
+                    await this.queue.add( { // Higher priority than the daily anime sync
+                        animeIds: animeIds,
+                        infoOnly: false
+                    }, {
+                        priority: 4,
+                        removeOnComplete: true
+                    });
+
+                    if (created.length) {
+                        await this.informationWorker.send({
+                            event: "resync",
+                            data: created
+                        });
+                    }
+                }
+            });
         }
 
-        this.informationWorker.send("activate");
+        await this.informationWorker.send({
+            event: "refetch"
+        });
+    }
+
+    @Cron(CronExpression.EVERY_12_HOURS)
+    async resyncAnime() {
+        await this.informationWorker.send("resync");
     }
 
     // Every 10 minutes, we check anime that have don't have "enough episode" stored in the database (mostly the anime source sites update slower than Anilist because subs stuff) so we sync that part more frequently
@@ -126,7 +146,5 @@ export default class InformationModule implements OnModuleInit {
     }
 
     async onModuleInit() {
-        // await this.pushToScrapeQueue();
-        // await this.refreshAnimeInfo();
     }
 }

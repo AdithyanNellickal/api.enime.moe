@@ -34,6 +34,7 @@ model Anime {
     status              AiringStatus
     season              AiringSeason
     title               Json
+    mappings            Json            @default("{}")
     currentEpisode      Int?
     relations           Relation[]
     episodes            Episode[]
@@ -41,6 +42,7 @@ model Anime {
     genre               Genre[]
     synonyms            String[]
     lastEpisodeUpdate   DateTime?
+    seasonInt           Int?
     description         String?
     duration            Int?
     averageScore        Int?

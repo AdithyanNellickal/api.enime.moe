@@ -29,6 +29,7 @@ export const AIRING_ANIME = gql`query ($season: MediaSeason, $year: Int, $format
       season
       format
       genres
+      seasonInt
       synonyms
       duration
       popularity

@@ -8,10 +8,22 @@ async function bootstrap() {
     const app = await NestFactory.create(InformationModule);
     service = app.select(InformationModule).get(InformationService);
 
-    process.on("message", async _ => {
-        Logger.debug("[InformationWorker] Running requests from parent");
-        const trackingAnime = await service.refetchAnime();
-        process.send(trackingAnime);
+    process.on("message", async ({ event, data }) => {
+        if (event === "refetch") {
+            Logger.debug("[InformationWorker] Start refetching anime information from Anilist");
+            const trackingAnime = await service.refetchAnime();
+            process.send({
+                event: "refetch",
+                data: trackingAnime
+            });
+        } else if (event === "resync") {
+            Logger.debug("[InformationWorker] Start resyncing anime information from Anilist to other information providers");
+            const trackingAnime = await service.resyncAnime(data);
+            process.send({
+                event: "resync",
+                data: trackingAnime
+            });
+        }
     });
 }
 bootstrap();
